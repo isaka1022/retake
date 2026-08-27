@@ -1,4 +1,6 @@
 google-adk[dev]==2.8.0
 google-genai
 google-cloud-storage
+google-api-python-client
+google-auth-oauthlib
 uvicorn

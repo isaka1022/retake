@@ -27,6 +27,7 @@ async def editor(ctx: Context) -> dict:
     for stale in ctx.state.get("stale_files", []):
         storage.discard(stale)
     ctx.state["stale_files"] = [str(reel), str(workdir / f"preview_t{take}.mp4")]
+    ctx.state["master_path"] = str(reel)
 
     seconds = await ffmpeg_ops.duration(reel)
     key = f"{ctx.invocation_id}/reel_t{take}.mp4"
