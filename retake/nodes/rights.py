@@ -33,7 +33,9 @@ async def rights_check(ctx: Context) -> dict:
                            catalog.get(s["spot_slug"]).get("image")) for s in shots]
     licence = rights.work_licence(usable)
 
-    ctx.state["clearances"] = {c["index"]: c for c in cleared}
+    # Kept as a list: state is serialised as JSON between runs, and integer
+    # dict keys come back as strings.
+    ctx.state["clearances"] = cleared
     ctx.state["blocked_shots"] = [b["index"] for b in blocked]
     ctx.state["work_licence"] = licence
 

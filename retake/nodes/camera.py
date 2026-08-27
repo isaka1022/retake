@@ -15,11 +15,14 @@ from google.adk.workflow import node
 from ..services import assets, captions, catalog, ffmpeg_ops, storage
 
 
-async def _shoot_one(shot: dict, workdir: Path, take: int, credit: str | None) -> dict:
+async def _shoot_one(
+    shot: dict, workdir: Path, take: int, credit: str | None, voice: str | None
+) -> dict:
     spot = catalog.get(shot["spot_slug"])
     photo = await assets.fetch_photo(spot["image"]["url"], spot["slug"])
     stem = f"cut_{shot['index']:02d}_t{take}"
     raw = workdir / f"{stem}_raw.mp4"
+    titled = workdir / f"{stem}_titled.mp4"
     out = workdir / f"{stem}.mp4"
     await ffmpeg_ops.ken_burns(
         photo,
@@ -30,8 +33,9 @@ async def _shoot_one(shot: dict, workdir: Path, take: int, credit: str | None) -
         exposure=shot.get("exposure", 0.0),
         contrast=shot.get("contrast", 1.0),
     )
-    await captions.burn(raw, out, caption=shot["caption"], credit=credit)
-    storage.discard(raw)
+    await captions.burn(raw, titled, caption=shot["caption"], credit=credit)
+    await ffmpeg_ops.mux_audio(titled, voice, out, seconds=shot["seconds"])
+    storage.discard(raw, titled)
     return {**shot, "clip": str(out), "photo": str(photo), "take": take}
 
 
@@ -71,10 +75,17 @@ async def camera(ctx: Context) -> dict:
     # A reshot cut replaces the old one; the old file has no further use.
     storage.discard(*(keep[s["index"]]["clip"] for s in queue if s["index"] in keep))
 
-    clearances = ctx.state.get("clearances", {})
+    clearances = {c["index"]: c for c in ctx.state.get("clearances", [])}
+    voices = {v["index"]: v for v in ctx.state.get("voice", [])}
     results = await asyncio.gather(
         *(
-            _shoot_one(s, workdir, take, (clearances.get(s["index"]) or {}).get("credit"))
+            _shoot_one(
+                s,
+                workdir,
+                take,
+                (clearances.get(s["index"]) or {}).get("credit"),
+                (voices.get(s["index"]) or {}).get("audio"),
+            )
             for s in queue
         ),
         return_exceptions=True,

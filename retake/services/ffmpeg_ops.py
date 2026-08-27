@@ -120,3 +120,52 @@ async def proxy(src: Path | str, out: Path | str) -> Path:
         str(out),
     ])
     return out
+
+
+# Every cut carries the same audio layout so the concat demuxer can join them
+# without re-encoding.
+AUDIO_RATE = 48000
+AUDIO_CHANNELS = 2
+
+
+async def mux_audio(
+    video: Path | str,
+    audio: Path | str | None,
+    out: Path | str,
+    *,
+    seconds: float,
+    lead_in: float = 0.6,
+) -> Path:
+    """Lay the read over the picture, padded to the length of the shot.
+
+    A shot with no read still gets a silent track: a cut missing audio entirely
+    would desync everything after it once the clips are joined.
+    """
+    out = Path(out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    silence = f"anullsrc=r={AUDIO_RATE}:cl=stereo"
+
+    if audio is None:
+        args = [
+            "-i", str(video), "-f", "lavfi", "-i", silence,
+            "-map", "0:v", "-map", "1:a",
+        ]
+    else:
+        args = [
+            "-i", str(video), "-i", str(audio),
+            "-filter_complex",
+            f"[1:a]adelay={int(lead_in * 1000)}:all=1,"
+            f"aformat=sample_rates={AUDIO_RATE}:channel_layouts=stereo,"
+            f"apad[a]",
+            "-map", "0:v", "-map", "[a]",
+        ]
+
+    await _run([
+        *args,
+        "-c:v", "copy",
+        "-c:a", "aac", "-b:a", "192k",
+        "-ar", str(AUDIO_RATE), "-ac", str(AUDIO_CHANNELS),
+        "-t", f"{seconds:.3f}",
+        str(out),
+    ])
+    return out

@@ -13,6 +13,7 @@ from .nodes.camera import camera
 from .nodes.delivery import abandoned, delivery
 from .nodes.director import director
 from .nodes.editor import editor
+from .nodes.narration import narration
 from .nodes.producer import producer
 from .nodes.rights import rights_check
 from .nodes.screening import screening
@@ -31,7 +32,8 @@ root_agent = Workflow(
         (START, producer),
         (producer, storyboard),
         (storyboard, rights_check),
-        (rights_check, camera),
+        (rights_check, narration),
+        (narration, camera),
         (camera, editor),
         (editor, director),
         (director, {"RETAKE": camera, "OK": screening}),
