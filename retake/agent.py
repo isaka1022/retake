@@ -10,11 +10,12 @@ from google.adk import Workflow
 from google.adk.workflow import START
 
 from .nodes.camera import camera
-from .nodes.delivery import delivery
+from .nodes.delivery import abandoned, delivery
 from .nodes.director import director
 from .nodes.editor import editor
 from .nodes.producer import producer
 from .nodes.rights import rights_check
+from .nodes.screening import screening
 from .nodes.storyboard import storyboard
 
 root_agent = Workflow(
@@ -33,6 +34,7 @@ root_agent = Workflow(
         (rights_check, camera),
         (camera, editor),
         (editor, director),
-        (director, {"RETAKE": camera, "OK": delivery}),
+        (director, {"RETAKE": camera, "OK": screening}),
+        (screening, {"PUBLISH": delivery, "RETAKE": camera, "ABANDON": abandoned}),
     ],
 )
