@@ -4,3 +4,4 @@ __pycache__/
 .env
 out/
 retake/assets/photos/
+out/published/

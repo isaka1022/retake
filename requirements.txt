@@ -1,0 +1,4 @@
+google-adk[dev]==2.8.0
+google-genai
+google-cloud-storage
+uvicorn
