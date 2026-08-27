@@ -20,8 +20,11 @@ async def editor(ctx: Context) -> dict:
     cuts = sorted(cuts, key=lambda c: c["index"])
     take = ctx.state.get("take", 1)
     workdir = storage.scratch_dir(f"{ctx.invocation_id}")
+    rough = workdir / f"rough_t{take}.mp4"
     reel = workdir / f"reel_t{take}.mp4"
-    await ffmpeg_ops.concat([c["clip"] for c in cuts], reel)
+    await ffmpeg_ops.concat([c["clip"] for c in cuts], rough)
+    _, levelled = await ffmpeg_ops.normalise_loudness(rough, reel)
+    storage.discard(rough)
 
     # The previous take is published and reviewed; keeping it only costs space.
     for stale in ctx.state.get("stale_files", []):
@@ -51,6 +54,7 @@ async def editor(ctx: Context) -> dict:
         "url": url,
         "seconds": round(seconds, 2),
         "cuts": len(cuts),
+        "loudness_normalised": levelled,
         "title": ctx.state.get("plan", {}).get("title", ""),
     }
     ctx.state["delivery"] = delivery

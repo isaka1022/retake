@@ -8,6 +8,7 @@ productions.
 from __future__ import annotations
 
 import asyncio
+import json
 import shutil
 from pathlib import Path
 
@@ -203,3 +204,59 @@ async def normalise(
         str(out),
     ])
     return out
+
+
+# YouTube plays back at this level; anything quieter just sounds thin next to
+# everything else on the platform.
+TARGET_LUFS = -14.0
+
+
+async def _measure_loudness(src: Path) -> dict[str, str] | None:
+    """First pass. Returns None when the track is silent or unmeasurable."""
+    proc = await asyncio.create_subprocess_exec(
+        FFMPEG, "-hide_banner", "-i", str(src),
+        "-af", f"loudnorm=I={TARGET_LUFS}:TP=-1.5:LRA=11:print_format=json",
+        "-f", "null", "-",
+        stdout=asyncio.subprocess.DEVNULL,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    _, err = await proc.communicate()
+    text = err.decode()
+    start = text.rfind("{")
+    if proc.returncode != 0 or start == -1:
+        return None
+    try:
+        # ffmpeg keeps logging after the report, so the object has to be read
+        # out of the stream rather than parsed as the whole remainder.
+        measured, _ = json.JSONDecoder().raw_decode(text[start:])
+        return measured
+    except json.JSONDecodeError:
+        return None
+
+
+async def normalise_loudness(src: Path | str, out: Path | str) -> tuple[Path, bool]:
+    """Two-pass loudness.
+
+    Falls back to a copy rather than failing the edit, and says which happened:
+    a silent fallback here looks exactly like a working normalisation.
+    """
+    src, out = Path(src), Path(out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+
+    measured = await _measure_loudness(src)
+    if not measured:
+        await _run(["-i", str(src), "-c", "copy", str(out)])
+        return out, False
+
+    await _run([
+        "-i", str(src),
+        "-af",
+        f"loudnorm=I={TARGET_LUFS}:TP=-1.5:LRA=11:"
+        f"measured_I={measured['input_i']}:measured_TP={measured['input_tp']}:"
+        f"measured_LRA={measured['input_lra']}:measured_thresh={measured['input_thresh']}:"
+        f"offset={measured['target_offset']}:linear=true",
+        "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
+        "-ar", str(AUDIO_RATE), "-ac", str(AUDIO_CHANNELS),
+        str(out),
+    ])
+    return out, True
