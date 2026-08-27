@@ -7,5 +7,6 @@ gcloud run deploy retake --source . \
   --allow-unauthenticated \
   --memory=8Gi --cpu=4 --timeout=3600 \
   --min-instances=1 --max-instances=1 --no-cpu-throttling \
+  --add-cloudsql-instances=retake-agentic-2608:us-central1:retake-sessions \
   --set-env-vars=RETAKE_BUCKET=retake-artifacts-2608 \
-  --set-secrets=GOOGLE_API_KEY=gemini-api-key:latest
+  --set-secrets=GOOGLE_API_KEY=gemini-api-key:latest,RETAKE_SESSION_URI=session-uri:latest

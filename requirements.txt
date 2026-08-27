@@ -3,4 +3,8 @@ google-genai
 google-cloud-storage
 google-api-python-client
 google-auth-oauthlib
+sqlalchemy
+asyncpg
+aiosqlite
+greenlet
 uvicorn
