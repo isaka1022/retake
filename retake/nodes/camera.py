@@ -101,6 +101,11 @@ async def camera(ctx: Context) -> dict:
     clearances = {c["index"]: c for c in ctx.state.get("clearances", [])}
     voices = {v["index"]: v for v in ctx.state.get("voice", [])}
     ledger = budget.Ledger.from_state(ctx.state.get("budget"))
+    # Failures carry across takes: a retake only queues the shots the director
+    # named, so writing a fresh list would erase a shot that died earlier and
+    # leave the reel quietly short.
+    failures = {f["index"]: f for f in ctx.state.get("failed_cuts", [])}
+
     results = await asyncio.gather(
         *(
             _shoot_one(
@@ -116,21 +121,27 @@ async def camera(ctx: Context) -> dict:
         return_exceptions=True,
     )
 
-    failed = []
     for shot, r in zip(queue, results):
         if isinstance(r, Exception):
             # One unusable location must not sink the whole shoot.
-            failed.append({"index": shot["index"], "reason": str(r)})
+            failures[shot["index"]] = {
+                "index": shot["index"],
+                "spot": shot["spot_slug"],
+                "reason": str(r),
+            }
         else:
             keep[r["index"]] = r
+            failures.pop(r["index"], None)
 
     cuts = [keep[i] for i in sorted(keep)]
+    failed = [failures[i] for i in sorted(failures)]
     ctx.state["cuts"] = cuts
     ctx.state["budget"] = ledger.to_state()
     ctx.state["failed_cuts"] = failed
     return {
         "take": take,
         "shot": [s["index"] for s in queue],
+        "planned": len(ctx.state["shots"]),
         "in_reel": len(cuts),
         "failed": failed,
         "spent_usd": round(ledger.spent_usd, 2),

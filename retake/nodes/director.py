@@ -57,7 +57,7 @@ SCHEMA = {
 PROMPT = """この映像を審査してください。カットの割りと今回の設定は以下のとおりです。
 
 {sheet}
-{history}
+{missing}{history}
 100点満点で採点し、出すか撮り直すかを decision で答えてください。
 撮り直すなら、直すべきカットに指示を出します。
 指示には必ず次をすべて含めてください。
@@ -114,10 +114,22 @@ async def director(ctx: Context) -> dict:
     take = ctx.state.get("take", 1)
     cuts = ctx.state["cuts"]
 
+    # Judging the assembly without knowing a location never made it would
+    # sign off on a film that is missing its subject.
+    lost = ctx.state.get("failed_cuts") or []
+    missing = (
+        "\n撮影できなかったカット: "
+        + "、".join(f"カット{f['index']}（{f.get('spot', '')}）" for f in lost)
+        + "。これらは欠けたまま編集されています。\n"
+        if lost
+        else ""
+    )
+
     review = await gemini.structured_video(
         Path(ctx.state["preview_path"]).read_bytes(),
         PROMPT.format(
             sheet=_shot_sheet(cuts),
+            missing=missing,
             history=_history(ctx.state.get("review_log", [])),
         ),
         SCHEMA,

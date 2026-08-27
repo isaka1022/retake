@@ -45,6 +45,14 @@ async def screening(ctx: Context) -> Any:
             f"素材ライセンス: {ctx.state.get('work_licence', '不明')}",
             f"監督の採点: {review.get('score')}点",
         ]
+        missing = delivery.get("missing_cuts") or []
+        if missing:
+            # The director scored what was assembled, not what was planned.
+            lines.append(
+                f"⚠ 計画 {delivery.get('planned_cuts')} カットのうち "
+                f"{len(missing)} カットが撮影できず、欠けたまま編集されています"
+                f"（カット {', '.join(str(m) for m in missing)}）"
+            )
         if not review.get("accepted", False):
             lines.append(f"⚠ 監督は承服していません: {review.get('protest', '')}")
         lines.append("公開してよいか判断してください。")

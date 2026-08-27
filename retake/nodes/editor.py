@@ -49,8 +49,11 @@ async def editor(ctx: Context) -> dict:
         ),
     )
 
+    planned = len(ctx.state.get("shots", []))
     delivery = {
         "take": take,
+        "planned_cuts": planned,
+        "missing_cuts": [f["index"] for f in ctx.state.get("failed_cuts", [])],
         "url": url,
         "seconds": round(seconds, 2),
         "cuts": len(cuts),
