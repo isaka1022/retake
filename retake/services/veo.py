@@ -47,6 +47,11 @@ def _cache_path(photo: Path, prompt: str) -> Path:
     return CACHE / f"{digest}.mp4"
 
 
+def is_cached(photo: Path | str, prompt: str) -> bool:
+    """A cached clip costs nothing to reuse, so the budget should not be charged."""
+    return _cache_path(Path(photo), prompt).is_file()
+
+
 async def shoot(photo: Path | str, prompt: str, out: Path | str) -> Path:
     photo, out = Path(photo), Path(out)
     out.parent.mkdir(parents=True, exist_ok=True)

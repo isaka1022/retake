@@ -12,11 +12,16 @@ from pathlib import Path
 from google.adk import Context
 from google.adk.workflow import node
 
-from ..services import assets, captions, catalog, ffmpeg_ops, storage, veo
+from ..services import assets, budget, captions, catalog, ffmpeg_ops, storage, veo
 
 
 async def _shoot_one(
-    shot: dict, workdir: Path, take: int, credit: str | None, voice: str | None
+    shot: dict,
+    workdir: Path,
+    take: int,
+    credit: str | None,
+    voice: str | None,
+    ledger: budget.Ledger,
 ) -> dict:
     spot = catalog.get(shot["spot_slug"])
     photo = await assets.fetch_photo(spot["image"]["url"], spot["slug"])
@@ -24,9 +29,15 @@ async def _shoot_one(
     raw = workdir / f"{stem}_raw.mp4"
     titled = workdir / f"{stem}_titled.mp4"
     out = workdir / f"{stem}.mp4"
+    cost = 0.0 if veo.is_cached(photo, shot.get("motion_prompt", "")) else budget.veo_cost(veo.SECONDS)
+    if shot.get("source") == "veo" and not ledger.can_afford(cost):
+        # Out of money: the shot still gets made, just not generated.
+        shot = {**shot, "source": "still", "downgraded": "予算上限のため写真から作成"}
+
     if shot.get("source") == "veo":
         generated = workdir / f"{stem}_veo.mp4"
         await veo.shoot(photo, shot["motion_prompt"], generated)
+        ledger.charge("veo", cost, f"cut {shot['index']}")
         await ffmpeg_ops.normalise(
             generated,
             raw,
@@ -89,6 +100,7 @@ async def camera(ctx: Context) -> dict:
 
     clearances = {c["index"]: c for c in ctx.state.get("clearances", [])}
     voices = {v["index"]: v for v in ctx.state.get("voice", [])}
+    ledger = budget.Ledger.from_state(ctx.state.get("budget"))
     results = await asyncio.gather(
         *(
             _shoot_one(
@@ -97,6 +109,7 @@ async def camera(ctx: Context) -> dict:
                 take,
                 (clearances.get(s["index"]) or {}).get("credit"),
                 (voices.get(s["index"]) or {}).get("audio"),
+                ledger,
             )
             for s in queue
         ),
@@ -113,10 +126,13 @@ async def camera(ctx: Context) -> dict:
 
     cuts = [keep[i] for i in sorted(keep)]
     ctx.state["cuts"] = cuts
+    ctx.state["budget"] = ledger.to_state()
     ctx.state["failed_cuts"] = failed
     return {
         "take": take,
         "shot": [s["index"] for s in queue],
         "in_reel": len(cuts),
         "failed": failed,
+        "spent_usd": round(ledger.spent_usd, 2),
+        "budget_left_usd": round(ledger.remaining_usd, 2),
     }

@@ -110,6 +110,10 @@ Veo bills per generated second, so generation is limited to one cut per film
 and cached by source image and prompt — a retake of a generated shot regrades
 it rather than paying to make it again.
 
+A run carries a ceiling (`services/budget.py`, $2.50 by default). When the
+money is gone the shoot does not fail; it falls back to a Ken Burns move across
+the same still and records that the cut was downgraded.
+
 ## Pre-existing work disclosed
 
 Written during the submission period. Two things carried in:
@@ -119,6 +123,6 @@ Written during the submission period. Two things carried in:
 - The location dataset (`spots.json`) predates the hackathon; the catalogue
   builder that joins it to Wikimedia licence metadata is new.
 
-The budget-guard and confidence-cascade patterns in `services/` are
-reimplementations of ideas from the author's own `llm-lane` package, not copied
-code.
+The spending ceiling in `services/budget.py` reimplements an idea from the
+author's own `llm-lane` package — a run that stops spending rather than one
+that stops working. It is a reimplementation, not copied code.
