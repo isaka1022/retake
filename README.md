@@ -27,9 +27,12 @@ what it made, and only then asks a human whether to publish.
 - **Criticises its own work.** The director watches the assembled reel as
   video, scores it, and issues notes carrying the replacement camera move,
   exposure and length.
-- **Stops before it publishes.** Releasing is not reversible, so a person
-  watches the reel and decides. If the director never signed off, the objection
-  is put in front of them.
+- **Stops before it releases.** A person watches the reel and decides. If the
+  director never signed off, the objection is put in front of them. The film
+  itself is always the deliverable — it comes back with a download URL, the
+  licence it inherited and the credits it owes. A YouTube channel, when one is
+  configured, is an additional destination, and that is the leg that cannot be
+  taken back.
 
 ## Requirements met
 
