@@ -13,6 +13,7 @@ from .nodes.camera import camera
 from .nodes.delivery import abandoned, delivery
 from .nodes.director import director
 from .nodes.editor import editor
+from .nodes.factcheck import factcheck
 from .nodes.narration import narration
 from .nodes.producer import producer
 from .nodes.rights import rights_check
@@ -30,7 +31,8 @@ root_agent = Workflow(
     # longer runs would stall the graph without raising anything.
     edges=[
         (START, producer),
-        (producer, storyboard),
+        (producer, factcheck),
+        (factcheck, storyboard),
         (storyboard, rights_check),
         (rights_check, narration),
         (narration, camera),

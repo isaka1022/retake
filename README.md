@@ -18,6 +18,10 @@ what it made, and only then asks a human whether to publish.
 - **Decides how to shoot it.** The storyboard assigns a camera move to every
   cut and picks the medium — a Ken Burns move across a photograph, or a shot
   generated from that same photograph with Veo.
+- **Checks its own words.** The films make factual claims about real shrines
+  and waterfalls. The proofreader reads every line back against the source
+  entry and rewrites anything it cannot support — numbers, names, official
+  designations, origin stories. Atmosphere it leaves alone.
 - **Clears the rights.** CC0, CC BY and CC BY-SA do not impose the same
   obligations. The credit is decided per still, and share-alike on any one of
   them binds the finished film.

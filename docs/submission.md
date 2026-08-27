@@ -16,7 +16,10 @@ sends it back.
 You give it one line — "a 30-second film about the sacred waterfalls" — and a
 crew of nine takes it from there.
 
-The producer picks locations and writes the narration. The storyboard assigns a
+The producer picks locations and writes the narration, and a proofreader reads
+it back against the source entry — the films assert real heights, real
+dedications and real origin stories, and the director watching the picture has
+no opinion about whether the words are true. The storyboard assigns a
 camera move to each cut and decides which shots are worth generating with Veo
 rather than panning across a photograph. The rights agent reads the licence on
 every still and works out what the finished film inherits. The narrator records
@@ -55,6 +58,17 @@ Twenty locations from a power-spot dataset I had already collected, paired with
 Wikimedia Commons photographs and their licence metadata. The catalogue keeps
 the artist and licence for every image, and the rights node refuses anything
 missing them.
+
+## One reviewer is not review
+
+The director watches the picture. That is one lens, and it is blind to
+everything outside the frame — a narration line can invent a UNESCO listing or
+double a waterfall's height and the reel still looks beautiful.
+
+So the crew disagrees along more than one axis: the proofreader argues with the
+words, the director argues with the image, the rights agent refuses material
+outright, and the human at the screening outranks all of them. What a solo
+creator loses is not hands. It is the people who tell them no.
 
 ## Challenges
 
