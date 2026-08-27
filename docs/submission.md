@@ -87,10 +87,25 @@ accepted once it hit the take limit, while the director's own comment called it
 unacceptable. Now it goes to the screening marked unapproved, with the
 objection attached, and the person decides.
 
-**Silent fallbacks look exactly like success.** Loudness normalisation parsed
-ffmpeg's report as JSON and failed on the trailing log lines, so every run
-quietly copied the file instead. The measurement was printing correctly the
-whole time.
+**Every real bug I hit was the same bug.** Three times, in three unrelated
+places, a failure was reported as a success:
+
+- Loudness normalisation parsed ffmpeg's report as JSON, tripped on the log
+  lines that follow it, and quietly copied the file instead. The measurement
+  had been printing correctly the whole time.
+- A reel that ran out of takes without meeting the bar was relabelled
+  *accepted*, while the director's own comment called it unacceptable.
+- A retake queues only the shots the director named, and it overwrote the
+  failure list — so a shot that died on the first take vanished from the
+  record. Three locations planned, two delivered, nothing reported. The
+  director then scored the assembly 95 without knowing the waterfall was
+  missing.
+
+None of them threw. None of them logged. Each one looked, from the outside,
+exactly like the system working. What they have in common is a fallback that
+produces a plausible result, and no one downstream comparing what was asked for
+against what arrived. The fix in every case was the same: carry the failure
+forward, and measure the output against the plan rather than against nothing.
 
 **Cloud Run rejects a buffered response over 32MB.** The app returned 200 and
 the frontend still turned it into a 500. Masters are streamed now.
