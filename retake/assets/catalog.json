@@ -1,0 +1,302 @@
+[
+  {
+    "slug": "oiwa-jinja",
+    "name": "御岩神社",
+    "area": "茨城県",
+    "legend": "NASAの宇宙飛行士が宇宙から地球を見たとき、日本の茨城県から光の柱が立っているのを発見したという伝説がある",
+    "overview": "日本最強クラスのパワースポットとして知られる古社。NASAの宇宙飛行士が宇宙から光の柱を確認したという伝説を持つ。188柱の神が祀られる。",
+    "highlights": "かびれ神宮（奥宮）・御岩山山頂の巨岩（磐座）・樹齢600年の三本杉・苔むした参道が圧倒的なパワーを放つ。",
+    "image": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Oiwa_Shrine_%2853312440827%29.jpg/1280px-Oiwa_Shrine_%2853312440827%29.jpg",
+      "filename": "Oiwa_Shrine_(53312440827).jpg",
+      "artist": "Raita Futo from Tokyo, Japan",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0"
+    }
+  },
+  {
+    "slug": "muroi-ryuketsu-jinja",
+    "name": "室生龍穴神社",
+    "area": "奈良県",
+    "legend": "龍神が住む穴（龍穴）から水が湧き出し、祈雨の聖地として古代から信仰されてきた",
+    "overview": "水の神・龍神を祀る古社。境内の奥に「吉祥龍穴」という実際の洞穴（龍穴）があり、古代から雨乞いの祈願所として朝廷にも信仰されてきた。",
+    "highlights": "吉祥龍穴（神社から徒歩15分）・天の岩戸（龍穴の近くの巨岩）・本殿裏の大杉が見どころ。",
+    "image": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Muro-ryuketsu-jinja%2C_Ryuketsu-1.jpg/1280px-Muro-ryuketsu-jinja%2C_Ryuketsu-1.jpg",
+      "filename": "Muro-ryuketsu-jinja,_Ryuketsu-1.jpg",
+      "artist": "Saigen Jiro",
+      "license": "CC0",
+      "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    }
+  },
+  {
+    "slug": "bungui-pass",
+    "name": "分杭峠（ゼロ磁場）",
+    "area": "長野県",
+    "legend": "中央構造線上の「ゼロ磁場」として気功師・中健次郎氏が発見・紹介し、一躍日本最強のパワースポットとして注目された",
+    "overview": "日本最大の断層「中央構造線」上に位置し、正と負の磁力が均衡する「ゼロ磁場」として有名。気功師が「日本最強のパワースポット」と紹介し全国から参拝者が訪れる。",
+    "highlights": "峠付近の気場スポット・中央構造線の大断層・伊那谷の眺望が見どころ。「気」を感じると言われる特定ポイントに多くの参拝者が集まる。",
+    "image": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/%E5%88%86%E6%9D%AD%E5%B3%A02009%E5%B9%B410%E6%9C%8818%E6%97%A5_-_panoramio.jpg/1280px-%E5%88%86%E6%9D%AD%E5%B3%A02009%E5%B9%B410%E6%9C%8818%E6%97%A5_-_panoramio.jpg",
+      "filename": "分杭峠2009年10月18日_-_panoramio.jpg",
+      "artist": "Mamusi Taka",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0"
+    }
+  },
+  {
+    "slug": "amano-iwato-jinja",
+    "name": "天岩戸神社",
+    "area": "宮崎県",
+    "legend": "天照大御神が身を隠した「天岩戸」が御神体。神様たちが集まって踊り、岩戸が開かれた場所が「天安河原」として残る",
+    "overview": "日本神話「天岩戸伝説」の舞台。天照大御神が身を隠した岩窟（天岩戸）を御神体とし、日本のすべての神が集まったとされる「天安河原」が近くにある。",
+    "highlights": "天岩戸（御神体・西本宮から拝観可能）・天安河原（巨大な洞窟・石塔が圧巻）・高千穂峡との組み合わせが定番。",
+    "image": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Amanoiwato-west-shrine_%2828795304727%29.jpg/1280px-Amanoiwato-west-shrine_%2828795304727%29.jpg",
+      "filename": "Amanoiwato-west-shrine_(28795304727).jpg",
+      "artist": "Big Ben in Japan",
+      "license": "CC BY-SA 2.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/2.0"
+    }
+  },
+  {
+    "slug": "noro-noro-no-iwa",
+    "name": "能登の諸橋大権現（能登半島の磐座）",
+    "area": "石川県",
+    "legend": "大国主命が能登の神々に国譲りを行った地とされ、奥宮の「入らずの森」は1300年間一度も人が立ち入ったことがない聖域",
+    "overview": "越前・能登国一之宮の気多大社。奥宮の「入らずの森」は1300年間不可侵の聖域として守られてきた、日本有数の神秘的なパワースポット。",
+    "highlights": "本殿（国重要文化財）・入らずの森（外から眺めるだけ）・境内の池・海岸線の絶景が見どころ。",
+    "image": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Keta_Taisha_in_Hakui%2C_Ishikawa_-_Jan_2%2C_2015.jpg/1280px-Keta_Taisha_in_Hakui%2C_Ishikawa_-_Jan_2%2C_2015.jpg",
+      "filename": "Keta_Taisha_in_Hakui,_Ishikawa_-_Jan_2,_2015.jpg",
+      "artist": "Haya_BS",
+      "license": "CC BY-SA 2.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/2.0"
+    }
+  },
+  {
+    "slug": "takamagahara-koshikiiwa",
+    "name": "高天原 甑岩神社",
+    "area": "兵庫県",
+    "legend": "高天原の神々が降り立ったとされる高さ30mの巨岩（甑岩）が御神体。周辺一帯が「廣田神社の元宮」とされる",
+    "overview": "西宮市の背後の山中に鎮座する、高さ30mの巨岩（甑岩）を御神体とする古社。高天原から神々が降り立った地とされ、強力なパワースポットとして知られる。",
+    "highlights": "御神体の甑岩（高さ30m）・境内から見る大阪湾の眺望・古木が生い茂る境内の清浄な空気が見どころ。",
+    "image": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Koshikiiwa-jinja-iwakura-north1.JPG/1280px-Koshikiiwa-jinja-iwakura-north1.JPG",
+      "filename": "Koshikiiwa-jinja-iwakura-north1.JPG",
+      "artist": "Bittercup",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0"
+    }
+  },
+  {
+    "slug": "asuka-ishibutai",
+    "name": "飛鳥 石舞台古墳",
+    "area": "奈良県",
+    "legend": "蘇我馬子の墓とされる古墳。「石舞台」の名は、狐が女性に化けてここで舞を踊ったという伝説に由来する",
+    "overview": "日本最大の横穴式石室古墳。蘇我馬子の墓とされ、30個以上の巨岩が積み上げられた石室が露出した状態で現存する。飛鳥時代の権力と技術の結晶。",
+    "highlights": "石室内部に入れる（国内最大級）・飛鳥歴史公園内の散策・周辺の古墳群・棚田の景観が見どころ。",
+    "image": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Ishibutai_Kofun%2C_sekishitsu-2.jpg/1280px-Ishibutai_Kofun%2C_sekishitsu-2.jpg",
+      "filename": "Ishibutai_Kofun,_sekishitsu-2.jpg",
+      "artist": "Saigen Jiro",
+      "license": "CC0",
+      "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    }
+  },
+  {
+    "slug": "jomon-sugi",
+    "name": "縄文杉（屋久島）",
+    "area": "鹿児島県",
+    "legend": "樹齢2170〜7200年とも言われる屋久杉の巨木。縄文時代から現代まで生き続けてきた「生きている神木」として崇められる",
+    "overview": "推定樹齢2170〜7200年の屋久杉。胸高周囲16.1mの巨木は世界遺産・屋久島のシンボルであり、「生きた神」として多くの参拝者が訪れる。",
+    "highlights": "縄文杉そのものの圧倒的な存在感・往復路の屋久杉・ウィルソン株・大株歩道の原生林が見どころ。",
+    "image": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Jomonsugi_%2852931651088%29.jpg/1280px-Jomonsugi_%2852931651088%29.jpg",
+      "filename": "Jomonsugi_(52931651088).jpg",
+      "artist": "Raita Futo from Tokyo, Japan",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0"
+    }
+  },
+  {
+    "slug": "nantai-san",
+    "name": "男体山（日光二荒山神社 奥宮）",
+    "area": "栃木県",
+    "legend": "日光二荒山神社の御神体山。標高2486mの山頂に奥宮がある。日光信仰の根本となった古来からの聖山",
+    "overview": "日光二荒山神社の御神体として古代から崇められてきた標高2486mの山。毎年5月〜10月の登拝期間には多くの参拝者が山頂を目指す。",
+    "highlights": "山頂の奥宮・山頂から望む中禅寺湖・関東平野・日光連山の絶景・登拝路途中の赤薙山の眺望が見どころ。",
+    "image": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/Sacred_Mount_Nantai_and_the_Shrine_%2852505159472%29.jpg/1280px-Sacred_Mount_Nantai_and_the_Shrine_%2852505159472%29.jpg",
+      "filename": "Sacred_Mount_Nantai_and_the_Shrine_(52505159472).jpg",
+      "artist": "Raita Futo from Tokyo, Japan",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0"
+    }
+  },
+  {
+    "slug": "sefa-utaki",
+    "name": "斎場御嶽（せーふぁうたき）",
+    "area": "沖縄県",
+    "legend": "琉球の創世神・アマミキヨが作った聖地のひとつ。琉球王国最高の聖地で、男子禁制の時代もあった女性の聖域",
+    "overview": "琉球王国最高の聖地として世界遺産に登録された御嶽（うたき）。琉球の創世神アマミキヨが創ったとされる巨岩・洞窟・森が神秘的な空間を形成する。",
+    "highlights": "三角形の岩の隙間から差し込む光（神の島・久高島を望む）・巨岩・洞窟・熱帯の植生が作る神秘的な景観。",
+    "image": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Okinawa_Nanjo_Sefa-utaki_Gusuku_site_Sangui_hdsr_VLux5_17.jpg/1280px-Okinawa_Nanjo_Sefa-utaki_Gusuku_site_Sangui_hdsr_VLux5_17.jpg",
+      "filename": "Okinawa_Nanjo_Sefa-utaki_Gusuku_site_Sangui_hdsr_VLux5_17.jpg",
+      "artist": "Hyppolyte de Saint-Rambert",
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0"
+    }
+  },
+  {
+    "slug": "fujisan",
+    "name": "富士山",
+    "area": "静岡県",
+    "legend": "",
+    "overview": "日本最高峰（3776m）にして日本のシンボル。古くから信仰登山の対象とされ、世界遺産「富士山—信仰の対象と芸術の源泉」として登録されている。",
+    "highlights": "山頂からのご来光・五合目からの眺望・周辺の富士五湖（河口湖・山中湖など）・白糸の滝・朝霧高原が見どころ。",
+    "image": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Sunrise_with_Mount_Fuji_-_March_2025.jpg/1280px-Sunrise_with_Mount_Fuji_-_March_2025.jpg",
+      "filename": "Sunrise_with_Mount_Fuji_-_March_2025.jpg",
+      "artist": "Romain Guy",
+      "license": "CC0",
+      "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    }
+  },
+  {
+    "slug": "nachi-no-taki",
+    "name": "那智の滝",
+    "area": "和歌山県",
+    "legend": "",
+    "overview": "落差133mで日本一の落差を誇る一枚滝。熊野那智大社の別宮・飛瀧神社の御神体として古来より神聖視されてきた。世界遺産。",
+    "highlights": "朱色の三重塔と那智の滝のコントラストが絶景。滝壺への近づきは禁止だが、飛瀧神社の拝観エリアから間近に見ることができる。",
+    "image": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Nachikatsuura_Nachi_Falls_13.jpg/1280px-Nachikatsuura_Nachi_Falls_13.jpg",
+      "filename": "Nachikatsuura_Nachi_Falls_13.jpg",
+      "artist": "Zairon",
+      "license": "CC BY 4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0"
+    }
+  },
+  {
+    "slug": "yakushima",
+    "name": "屋久島",
+    "area": "鹿児島県",
+    "legend": "",
+    "overview": "樹齢7200年とも言われる縄文杉をはじめ、1000年を超える屋久杉が生い茂る原生林の島。世界遺産。映画「もののけ姫」の舞台モデル。",
+    "highlights": "縄文杉（推定樹齢2170〜7200年）・白谷雲水峡（苔むす森）・ヤクモニ・宮之浦岳登山が見どころ。",
+    "image": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Yakushima%27s_green_forest_%2852931654003%29.jpg/1280px-Yakushima%27s_green_forest_%2852931654003%29.jpg",
+      "filename": "Yakushima's_green_forest_(52931654003).jpg",
+      "artist": "Raita Futo from Tokyo, Japan",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0"
+    }
+  },
+  {
+    "slug": "oirase-gorge",
+    "name": "奥入瀬渓流",
+    "area": "青森県",
+    "legend": "",
+    "overview": "十和田湖から流れ出る全長約14kmの渓流。苔むした岩・清流・大木が織り成す景観は「東北のパワースポット」として高い人気を誇る。",
+    "highlights": "阿修羅の流れ・雲井の滝・銚子大滝など14kmに数多くの絶景ポイントが続く。遊歩道が整備されており歩いて楽しめる。",
+    "image": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Oirase-keiryu.jpg/1280px-Oirase-keiryu.jpg",
+      "filename": "Oirase-keiryu.jpg",
+      "artist": "MaedaAkihiko",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0"
+    }
+  },
+  {
+    "slug": "shirakamis-sanchi",
+    "name": "白神山地",
+    "area": "青森県",
+    "legend": "",
+    "overview": "世界最大規模のブナの原生林が広がる秘境。人の手が入っていない太古の森が残り、1993年に日本初の世界遺産として登録された。",
+    "highlights": "十二湖（青い池・沸壺の池）・暗門の滝（三段の滝）・ブナ原生林の散策コースが見どころ。",
+    "image": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Shirakami-sanchi_seen_from_Noshiro_at_sunset_time.jpg/1280px-Shirakami-sanchi_seen_from_Noshiro_at_sunset_time.jpg",
+      "filename": "Shirakami-sanchi_seen_from_Noshiro_at_sunset_time.jpg",
+      "artist": "掬茶",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0"
+    }
+  },
+  {
+    "slug": "aso-caldera",
+    "name": "阿蘇山",
+    "area": "熊本県",
+    "legend": "",
+    "overview": "世界最大級のカルデラを持つ活火山。今も噴煙を上げる火口は世界的に珍しい活火山見学スポット。火口周辺は強力なパワースポットとしても知られる。",
+    "highlights": "中岳火口（エメラルドグリーンの火口湖）・草千里ヶ浜（広大な草原）・米塚（美しい寄生火山）・阿蘇神社が見どころ。",
+    "image": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Aso_morning_Panorama_%2853000219341%29.jpg/1280px-Aso_morning_Panorama_%2853000219341%29.jpg",
+      "filename": "Aso_morning_Panorama_(53000219341).jpg",
+      "artist": "Raita Futo from Tokyo, Japan",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0"
+    }
+  },
+  {
+    "slug": "nikko-kegon-falls",
+    "name": "日光 華厳の滝",
+    "area": "栃木県",
+    "legend": "",
+    "overview": "中禅寺湖から流れ落ちる落差97mの壮大な滝。那智の滝・袋田の滝と並ぶ「日本三名瀑」のひとつ。エレベーターで滝壺付近まで降りられる。",
+    "highlights": "落差97mの華厳の滝・中禅寺湖・戦場ヶ原（湿原）・男体山が見どころ。冬季の氷瀑も幻想的。",
+    "image": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Kegon_Taki.jpg/1280px-Kegon_Taki.jpg",
+      "filename": "Kegon_Taki.jpg",
+      "artist": "Jordy Meow",
+      "license": "CC BY-SA 3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0"
+    }
+  },
+  {
+    "slug": "tottori-sakyu",
+    "name": "鳥取砂丘",
+    "area": "鳥取県",
+    "legend": "",
+    "overview": "日本唯一の砂漠的景観を持つ国定公園。南北2.4km・東西16kmに広がる砂丘は、日本で唯一「砂漠」的な体験ができる国内屈指のパワースポット。",
+    "highlights": "馬の背（最大傾斜30度の砂の断崖）・ウィンドリップル（風紋）・らくだに乗る体験・砂の美術館が見どころ。",
+    "image": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Tottori_sakyuu_panorama.jpg/1280px-Tottori_sakyuu_panorama.jpg",
+      "filename": "Tottori_sakyuu_panorama.jpg",
+      "artist": "Purity Standard",
+      "license": "CC BY 2.0",
+      "license_url": "https://creativecommons.org/licenses/by/2.0"
+    }
+  },
+  {
+    "slug": "takachiho-gorge",
+    "name": "高千穂峡",
+    "area": "宮崎県",
+    "legend": "",
+    "overview": "天岩戸神話ゆかりの地に広がる国の名勝・天然記念物。高さ80〜100mの柱状節理の断崖が続く渓谷と真名井の滝が圧倒的な迫力を誇る。",
+    "highlights": "真名井の滝（落差17m・国指定名勝）・ボート遊覧（滝の下から見上げる絶景）・高千穂神社・天岩戸神社が見どころ。",
+    "image": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/88/Takachihokyo_20170219-1.jpg/1280px-Takachihokyo_20170219-1.jpg",
+      "filename": "Takachihokyo_20170219-1.jpg",
+      "artist": "Suicasmo",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0"
+    }
+  },
+  {
+    "slug": "togakushi-forest",
+    "name": "戸隠山・戸隠の森",
+    "area": "長野県",
+    "legend": "",
+    "overview": "天岩戸を投げ飛ばした場所とされる霊山。戸隠神社奥社に続く約2kmの杉並木と、戸隠山の険しい岩稜が強力なパワースポットを形成している。",
+    "highlights": "奥社参道の樹齢400年の杉並木・戸隠山の岩稜登山（上級者向け）・鏡池（山の逆さ映り）・戸隠蕎麦が見どころ。",
+    "image": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/Drone_panorama_of_Mount_Togakushi.jpg/1280px-Drone_panorama_of_Mount_Togakushi.jpg",
+      "filename": "Drone_panorama_of_Mount_Togakushi.jpg",
+      "artist": "Benlisquare",
+      "license": "CC BY-SA 4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0"
+    }
+  }
+]
