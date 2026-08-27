@@ -102,3 +102,17 @@ async def duration(path: Path | str) -> float:
     )
     out, _ = await proc.communicate()
     return float(out.decode().strip())
+
+
+async def proxy(src: Path | str, out: Path | str) -> Path:
+    """A small viewing copy. The master stays in the bucket; only this is light
+    enough to ride along inside a session for the human to watch."""
+    out = Path(out)
+    await _run([
+        "-i", str(src),
+        "-vf", "scale=960:-2",
+        "-c:v", "libx264", "-preset", "veryfast", "-crf", "30",
+        "-pix_fmt", "yuv420p", "-movflags", "+faststart",
+        str(out),
+    ])
+    return out
