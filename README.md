@@ -37,7 +37,7 @@ what it made, and only then asks a human whether to publish.
 |---|---|
 | Gemini 3.5 or later | `gemini-3.5-flash` for planning, storyboarding and multimodal review |
 | Google agent framework | ADK 2.0 graph workflow (`google-adk` 2.8.0) |
-| Google Cloud infrastructure | Cloud Run (service + hosted UI), Cloud Storage, Secret Manager |
+| Google Cloud infrastructure | Cloud Run (service + hosted UI), Cloud SQL (sessions), Cloud Storage, Secret Manager |
 | Bonus models | Veo 3.1 Fast (image-to-video), Gemini TTS for narration |
 
 ## Run it locally
@@ -75,9 +75,13 @@ adk web .
 server, so this repo ships its own `Dockerfile` and `main.py`.
 
 ```bash
-zsh scripts/gcp_prep.sh      # bucket, secret, IAM — reads GOOGLE_API_KEY from the env
-zsh scripts/deploy.sh        # Cloud Build → Cloud Run
+zsh scripts/gcp_prep.sh       # bucket, secret, IAM — reads GOOGLE_API_KEY from the env
+zsh scripts/cloudsql_setup.sh # database, user and connection secret for sessions
+zsh scripts/deploy.sh         # Cloud Build → Cloud Run
 ```
+
+Sessions live in Cloud SQL because ADK keeps them in memory on Cloud Run, and a
+restart would drop a reel waiting at the screening gate.
 
 `gcp_prep.sh` pipes the key into Secret Manager over stdin so the value never
 reaches a command line or a shell history. `deploy.sh` injects it with
