@@ -1,0 +1,8 @@
+.git/
+.venv/
+out/
+__pycache__/
+**/__pycache__/
+*.pyc
+retake/assets/photos/
+scripts/
