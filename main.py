@@ -8,7 +8,8 @@ trace view depends on.
 import mimetypes
 from pathlib import Path
 
-from fastapi import HTTPException, Response
+from fastapi import HTTPException
+from fastapi.responses import StreamingResponse
 from google.adk.cli.fast_api import get_fast_api_app
 
 from retake.services import storage
@@ -20,12 +21,15 @@ app = get_fast_api_app(
 
 
 @app.get("/artifacts/{key:path}")
-async def artifact(key: str) -> Response:
+async def artifact(key: str) -> StreamingResponse:
     """Serve rendered output. The app owns access rather than a public bucket."""
     if ".." in key:
         raise HTTPException(status_code=400, detail="bad key")
-    data = await storage.fetch(key)
-    if data is None:
+    length = await storage.size(key)
+    if length is None:
         raise HTTPException(status_code=404, detail="not found")
-    media_type = mimetypes.guess_type(key)[0] or "application/octet-stream"
-    return Response(content=data, media_type=media_type)
+    return StreamingResponse(
+        storage.stream(key),
+        media_type=mimetypes.guess_type(key)[0] or "application/octet-stream",
+        headers={"Content-Length": str(length)},
+    )

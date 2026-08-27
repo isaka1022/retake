@@ -11,6 +11,7 @@ from __future__ import annotations
 import asyncio
 import os
 import shutil
+from collections.abc import AsyncIterator
 from pathlib import Path
 
 BUCKET = os.environ.get("RETAKE_BUCKET")
@@ -68,16 +69,37 @@ async def publish(path: Path, key: str) -> str:
     return f"/{PREFIX}/{key}"
 
 
-def _download(key: str) -> bytes | None:
-    blob = _client().bucket(BUCKET).blob(f"{PREFIX}/{key}")
-    return blob.download_as_bytes() if blob.exists() else None
+# Cloud Run caps a buffered response at 32MB and a master reel runs past that,
+# so artifacts are streamed rather than loaded whole.
+CHUNK = 1 << 20
 
 
-async def fetch(key: str) -> bytes | None:
-    """Read back a published artifact. Returns None when it is not there."""
+def _blob(key: str):
+    return _client().bucket(BUCKET).blob(f"{PREFIX}/{key}")
+
+
+async def size(key: str) -> int | None:
+    """Bytes held for this key, or None when nothing is stored under it."""
     if BUCKET:
-        return await asyncio.to_thread(_download, key)
+        blob = await asyncio.to_thread(_blob, key)
+        if not await asyncio.to_thread(blob.exists):
+            return None
+        await asyncio.to_thread(blob.reload)
+        return blob.size
     src = _LOCAL_STORE / key
-    if not src.is_file():
-        return None
-    return await asyncio.to_thread(src.read_bytes)
+    return src.stat().st_size if src.is_file() else None
+
+
+async def stream(key: str) -> AsyncIterator[bytes]:
+    if BUCKET:
+        handle = await asyncio.to_thread(lambda: _blob(key).open("rb"))
+    else:
+        handle = await asyncio.to_thread((_LOCAL_STORE / key).open, "rb")
+    try:
+        while True:
+            block = await asyncio.to_thread(handle.read, CHUNK)
+            if not block:
+                return
+            yield block
+    finally:
+        await asyncio.to_thread(handle.close)
