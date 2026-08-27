@@ -7,10 +7,15 @@ attribution actually has to appear.
 
 from __future__ import annotations
 
+import os
+
 from google.adk import Context
 from google.adk.workflow import node
 
 from ..services import youtube
+
+# Set on deploy so the finished film is reachable by whoever is handed the run.
+PUBLIC_URL = os.environ.get("RETAKE_PUBLIC_URL", "").rstrip("/")
 
 
 def _description(ctx: Context) -> str:
@@ -39,8 +44,13 @@ def _description(ctx: Context) -> str:
 async def delivery(ctx: Context) -> dict:
     d = ctx.state["delivery"]
     review = ctx.state.get("review", {})
+
+    # The film itself is the deliverable. A channel is somewhere else to put it.
     result = {
         **d,
+        "download": f"{PUBLIC_URL}{d['url']}" if PUBLIC_URL else d["url"],
+        "licence": ctx.state.get("work_licence"),
+        "credits": [c["credit"] for c in ctx.state.get("clearances", []) if c.get("credit")],
         "screening_note": ctx.state.get("screening", {}).get("note", ""),
         "approved_on_take": review.get("take"),
         "score": review.get("score"),
@@ -48,8 +58,7 @@ async def delivery(ctx: Context) -> dict:
     }
 
     if not youtube.configured():
-        # Publishing is opt-in: without a channel the reel simply stays put.
-        result |= {"published": False, "reason": "YouTube の認証情報が未設定です"}
+        result |= {"youtube": "未設定のため公開先はダウンロードのみ"}
         ctx.state["published"] = result
         return result
 
@@ -61,10 +70,11 @@ async def delivery(ctx: Context) -> dict:
             tags=["AllThingsAgenticHackathon", "ADK", "Gemini"],
             privacy="unlisted",
         )
-        result |= {"published": True, **posted}
+        result |= {"youtube": posted["url"], "video_id": posted["video_id"]}
     except Exception as exc:
-        # A failed upload must not read as a successful release.
-        result |= {"published": False, "reason": f"{type(exc).__name__}: {exc}"}
+        # A failed upload must not read as a successful release, but the film
+        # is still finished and still downloadable.
+        result |= {"youtube": f"公開に失敗しました: {type(exc).__name__}: {exc}"}
 
     ctx.state["published"] = result
     return result
