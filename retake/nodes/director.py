@@ -90,11 +90,21 @@ def _history(log: list[dict]) -> str:
 def _shot_sheet(cuts: list[dict]) -> str:
     lines, at = [], 0.0
     for c in sorted(cuts, key=lambda x: x["index"]):
-        lines.append(
-            f"カット{c['index']}: {at:.1f}〜{at + c['seconds']:.1f}秒 / {c['motion']} / "
-            f"zoom {c['zoom_to']:.2f} / exposure {c.get('exposure', 0.0):+.2f} / "
-            f"contrast {c.get('contrast', 1.0):.2f}"
-        )
+        if c.get("source") == "veo":
+            # A generated shot cannot be recomposed without paying to make it
+            # again, so only the grade is on the table.
+            lines.append(
+                f"カット{c['index']}: {at:.1f}〜{at + c['seconds']:.1f}秒 / 生成ショット"
+                f"（カメラワークは変更不可・露出のみ調整可） / "
+                f"exposure {c.get('exposure', 0.0):+.2f} / "
+                f"contrast {c.get('contrast', 1.0):.2f}"
+            )
+        else:
+            lines.append(
+                f"カット{c['index']}: {at:.1f}〜{at + c['seconds']:.1f}秒 / {c['motion']} / "
+                f"zoom {c['zoom_to']:.2f} / exposure {c.get('exposure', 0.0):+.2f} / "
+                f"contrast {c.get('contrast', 1.0):.2f}"
+            )
         at += c["seconds"]
     return "\n".join(lines)
 

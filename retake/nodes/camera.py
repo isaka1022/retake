@@ -12,7 +12,7 @@ from pathlib import Path
 from google.adk import Context
 from google.adk.workflow import node
 
-from ..services import assets, captions, catalog, ffmpeg_ops, storage
+from ..services import assets, captions, catalog, ffmpeg_ops, storage, veo
 
 
 async def _shoot_one(
@@ -24,15 +24,27 @@ async def _shoot_one(
     raw = workdir / f"{stem}_raw.mp4"
     titled = workdir / f"{stem}_titled.mp4"
     out = workdir / f"{stem}.mp4"
-    await ffmpeg_ops.ken_burns(
-        photo,
-        raw,
-        seconds=shot["seconds"],
-        zoom_to=shot["zoom_to"],
-        motion=shot["motion"],
-        exposure=shot.get("exposure", 0.0),
-        contrast=shot.get("contrast", 1.0),
-    )
+    if shot.get("source") == "veo":
+        generated = workdir / f"{stem}_veo.mp4"
+        await veo.shoot(photo, shot["motion_prompt"], generated)
+        await ffmpeg_ops.normalise(
+            generated,
+            raw,
+            seconds=shot["seconds"],
+            exposure=shot.get("exposure", 0.0),
+            contrast=shot.get("contrast", 1.0),
+        )
+        storage.discard(generated)
+    else:
+        await ffmpeg_ops.ken_burns(
+            photo,
+            raw,
+            seconds=shot["seconds"],
+            zoom_to=shot["zoom_to"],
+            motion=shot["motion"],
+            exposure=shot.get("exposure", 0.0),
+            contrast=shot.get("contrast", 1.0),
+        )
     await captions.burn(raw, titled, caption=shot["caption"], credit=credit)
     await ffmpeg_ops.mux_audio(titled, voice, out, seconds=shot["seconds"])
     storage.discard(raw, titled)

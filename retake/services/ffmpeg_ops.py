@@ -169,3 +169,37 @@ async def mux_audio(
         str(out),
     ])
     return out
+
+
+async def normalise(
+    src: Path | str,
+    out: Path | str,
+    *,
+    seconds: float,
+    exposure: float = 0.0,
+    contrast: float = 1.0,
+) -> Path:
+    """Bring a generated clip in line with the rest of the reel.
+
+    Veo returns 720p with its own audio at a fixed length; the concat demuxer
+    needs every cut to match, so this resizes, drops the audio and either trims
+    or freezes the tail to the length the edit asked for.
+    """
+    out = Path(out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    width, height = SIZE.split("x")
+    await _run([
+        "-i", str(src),
+        "-vf",
+        f"scale={width}:{height}:force_original_aspect_ratio=increase,"
+        f"crop={width}:{height},"
+        f"eq=brightness={exposure:.3f}:contrast={contrast:.3f},"
+        f"tpad=stop_mode=clone:stop_duration={max(seconds, 0.1):.3f},"
+        f"fps={FPS}",
+        "-an",
+        "-frames:v", str(max(1, round(seconds * FPS))),
+        "-c:v", "libx264", "-preset", "medium", "-crf", "18",
+        "-pix_fmt", "yuv420p", "-r", str(FPS),
+        str(out),
+    ])
+    return out
