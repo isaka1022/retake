@@ -12,22 +12,26 @@ from pathlib import Path
 from google.adk import Context
 from google.adk.workflow import node
 
-from ..services import assets, catalog, ffmpeg_ops, storage
+from ..services import assets, captions, catalog, ffmpeg_ops, storage
 
 
-async def _shoot_one(shot: dict, workdir: Path, take: int) -> dict:
+async def _shoot_one(shot: dict, workdir: Path, take: int, credit: str | None) -> dict:
     spot = catalog.get(shot["spot_slug"])
     photo = await assets.fetch_photo(spot["image"]["url"], spot["slug"])
-    out = workdir / f"cut_{shot['index']:02d}_t{take}.mp4"
+    stem = f"cut_{shot['index']:02d}_t{take}"
+    raw = workdir / f"{stem}_raw.mp4"
+    out = workdir / f"{stem}.mp4"
     await ffmpeg_ops.ken_burns(
         photo,
-        out,
+        raw,
         seconds=shot["seconds"],
         zoom_to=shot["zoom_to"],
         motion=shot["motion"],
         exposure=shot.get("exposure", 0.0),
         contrast=shot.get("contrast", 1.0),
     )
+    await captions.burn(raw, out, caption=shot["caption"], credit=credit)
+    storage.discard(raw)
     return {**shot, "clip": str(out), "photo": str(photo), "take": take}
 
 
@@ -67,8 +71,13 @@ async def camera(ctx: Context) -> dict:
     # A reshot cut replaces the old one; the old file has no further use.
     storage.discard(*(keep[s["index"]]["clip"] for s in queue if s["index"] in keep))
 
+    clearances = ctx.state.get("clearances", {})
     results = await asyncio.gather(
-        *(_shoot_one(s, workdir, take) for s in queue), return_exceptions=True
+        *(
+            _shoot_one(s, workdir, take, (clearances.get(s["index"]) or {}).get("credit"))
+            for s in queue
+        ),
+        return_exceptions=True,
     )
 
     failed = []

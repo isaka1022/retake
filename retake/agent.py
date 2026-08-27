@@ -14,6 +14,7 @@ from .nodes.delivery import delivery
 from .nodes.director import director
 from .nodes.editor import editor
 from .nodes.producer import producer
+from .nodes.rights import rights_check
 from .nodes.storyboard import storyboard
 
 root_agent = Workflow(
@@ -22,10 +23,14 @@ root_agent = Workflow(
         "An AI film crew that plans, shoots, edits and reviews a short film, "
         "and sends its own work back for a retake when it is not good enough."
     ),
+    # Rights clearance sits ahead of the shoot rather than beside it: the retake
+    # cycle re-enters at the camera, and a join waiting on a branch that no
+    # longer runs would stall the graph without raising anything.
     edges=[
         (START, producer),
         (producer, storyboard),
-        (storyboard, camera),
+        (storyboard, rights_check),
+        (rights_check, camera),
         (camera, editor),
         (editor, director),
         (director, {"RETAKE": camera, "OK": delivery}),
