@@ -26,6 +26,24 @@ def scratch_dir(name: str) -> Path:
     return d
 
 
+def discard(*paths: Path | str) -> None:
+    """Drop intermediates once they are no longer referenced. On Cloud Run the
+    scratch tree is RAM, so holding every take is a slow memory leak."""
+    for p in paths:
+        p = Path(p)
+        try:
+            if p.is_dir():
+                shutil.rmtree(p, ignore_errors=True)
+            elif p.exists():
+                p.unlink()
+        except OSError:
+            pass
+
+
+def clear_run(invocation_id: str) -> None:
+    discard(SCRATCH / invocation_id)
+
+
 _LOCAL_STORE = Path(__file__).resolve().parent.parent.parent / "out" / "published"
 
 

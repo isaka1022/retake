@@ -61,6 +61,8 @@ async def ken_burns(
     seconds: float,
     zoom_to: float = 1.15,
     motion: str = "push_in",
+    exposure: float = 0.0,
+    contrast: float = 1.0,
 ) -> Path:
     """Render one still into a moving clip.
 
@@ -72,7 +74,9 @@ async def ken_burns(
     out.parent.mkdir(parents=True, exist_ok=True)
     await _run([
         "-loop", "1", "-i", str(image),
-        "-filter_complex", f"[0:v]{_zoompan_expr(frames, zoom_to, motion)}[v]",
+        "-filter_complex",
+        f"[0:v]{_zoompan_expr(frames, zoom_to, motion)}"
+        f",eq=brightness={exposure:.3f}:contrast={contrast:.3f}[v]",
         "-map", "[v]", "-frames:v", str(frames),
         "-c:v", "libx264", "-preset", "medium", "-crf", "18",
         "-pix_fmt", "yuv420p", "-r", str(FPS), str(out),

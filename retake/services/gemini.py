@@ -51,3 +51,30 @@ async def text(prompt: str, *, system: str | None = None, model: str | None = No
         config=types.GenerateContentConfig(system_instruction=system),
     )
     return (resp.text or "").strip()
+
+
+async def structured_video(
+    video: bytes,
+    prompt: str,
+    schema: dict[str, Any],
+    *,
+    system: str | None = None,
+    model: str | None = None,
+) -> Any:
+    """Let a crew member actually watch a cut rather than read a description."""
+    resp = await client().aio.models.generate_content(
+        model=model or MODEL,
+        contents=types.Content(
+            role="user",
+            parts=[
+                types.Part(inline_data=types.Blob(data=video, mime_type="video/mp4")),
+                types.Part(text=prompt),
+            ],
+        ),
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=schema,
+            system_instruction=system,
+        ),
+    )
+    return json.loads(resp.text)

@@ -37,6 +37,12 @@ async def main(brief: str) -> None:
     final = await runner.session_service.get_session(
         app_name="retake", user_id="local", session_id=session.id
     )
+    print("\n=== 監督の講評 ===")
+    for r in final.state.get("review_log", []):
+        print(f"  take {r['take']}  score {r['score']}  -> {r['verdict']}"
+              f"  (accepted={r['accepted']})"
+              f"  差し戻し {r['retakes']}")
+        print(f"    {r['comment']}")
     print("\n=== delivery ===")
     print(final.state.get("delivery"))
     print("failed cuts:", final.state.get("failed_cuts"))
