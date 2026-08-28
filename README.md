@@ -11,6 +11,16 @@ what it made, and only then asks a human whether to publish.
 "Sacred sites of water and waterfalls, 30 seconds"  →  a 25-second graded, captioned, narrated film
 ```
 
+| | |
+|---|---|
+| Live demo (unedited) | https://youtu.be/DGUlAekqiyk |
+| Running on Cloud Run | https://retake-4lycxzkhja-uc.a.run.app/pipeline |
+| Architecture | [docs/architecture.md](docs/architecture.md) |
+
+`/pipeline` is the crew's own live view — it lights up left to right as the
+graph runs, and a reshot node carries the take it is on. `/dev-ui/` is ADK's
+console, where the brief goes in and the screening gate is answered.
+
 ## What it does on its own
 
 - **Chooses what to shoot.** The producer picks three or four locations from a
