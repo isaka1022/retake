@@ -1,5 +1,22 @@
 # Devpost submission text
 
+## Elevator pitch
+
+An AI film crew built as an ADK 2.0 graph: it plans, shoots, edits and reviews a
+short film, then sends its own work back for a retake. What a solo creator loses
+is not hands — it is the people who tell them no.
+
+## Links
+
+- Live demo, unedited: https://youtu.be/DGUlAekqiyk
+- Running on Cloud Run: https://retake-4lycxzkhja-uc.a.run.app/pipeline
+- Repository: https://github.com/isaka1022/retake
+
+## Built with
+
+python · google-adk · gemini · veo · cloud-run · cloud-sql · cloud-storage ·
+secret-manager · fastapi · ffmpeg · graphviz · wikimedia-commons
+
 ## Inspiration
 
 I make music and short films on my own. The part that takes longest is not any
