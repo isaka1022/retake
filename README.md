@@ -86,6 +86,27 @@ To drive it through the ADK web UI instead:
 adk web .
 ```
 
+## Reproducible testing
+
+After `Run it locally`, these three commands exercise the whole graph without
+a browser. Each prints what it produced, so a failure is visible rather than
+silent.
+
+```bash
+# 1. Build the material catalogue (20 locations, photos, licences)
+PYTHONPATH=. python scripts/build_catalog.py
+
+# 2. One full run, start to finish, printing the delivery record
+PYTHONPATH=. python scripts/run_local.py "Sacred sites of water and waterfalls, 30 seconds"
+
+# 3. The same run, stopping at the screening gate and answering it
+PYTHONPATH=. python scripts/test_hitl.py "Sacred sites of water and waterfalls, 30 seconds" publish
+```
+
+Expect a 1920x1080 H.264 file, `planned_cuts` equal to `cuts` when every shot
+lands, and any shot that failed listed in `missing_cuts` with its reason. On the
+deployed service the same run is watchable at `/pipeline`.
+
 ## Deploy to Cloud Run
 
 `adk deploy cloud_run` generates an image without `ffmpeg` and strips the dev

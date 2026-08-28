@@ -30,6 +30,8 @@ flowchart TD
     style abandoned fill:#f8d7da,stroke:#721c24
 ```
 
+![Architecture](architecture.png)
+
 ## Why this shape
 
 **The branches are total in code, not in the graph.** ADK marks both branch
