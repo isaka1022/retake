@@ -1,4 +1,4 @@
-"""試写 — the last gate before the film leaves the building.
+"""Screening — the last gate before the film leaves the building.
 
 Publishing is not reversible, so a person watches the reel and decides. When
 the director never signed off, the objection is put in front of them rather
@@ -40,22 +40,22 @@ async def screening(ctx: Context) -> Any:
     answer = _answer(ctx, interrupt_id)
     if answer is None:
         lines = [
-            f"『{delivery.get('title', '')}』 {delivery.get('seconds', 0)}秒 "
-            f"/ {delivery.get('cuts', 0)}カット / take {review.get('take')}",
-            f"素材ライセンス: {ctx.state.get('work_licence', '不明')}",
-            f"監督の採点: {review.get('score')}点",
+            f"\"{delivery.get('title', '')}\" {delivery.get('seconds', 0)}s "
+            f"/ {delivery.get('cuts', 0)} cuts / take {review.get('take')}",
+            f"Footage licence: {ctx.state.get('work_licence', 'unknown')}",
+            f"Director's score: {review.get('score')}",
         ]
         missing = delivery.get("missing_cuts") or []
         if missing:
             # The director scored what was assembled, not what was planned.
             lines.append(
-                f"⚠ 計画 {delivery.get('planned_cuts')} カットのうち "
-                f"{len(missing)} カットが撮影できず、欠けたまま編集されています"
-                f"（カット {', '.join(str(m) for m in missing)}）"
+                f"⚠ {len(missing)} of {delivery.get('planned_cuts')} planned cuts "
+                f"could not be shot and the edit went out short "
+                f"(cuts {', '.join(str(m) for m in missing)})"
             )
         if not review.get("accepted", False):
-            lines.append(f"⚠ 監督は承服していません: {review.get('protest', '')}")
-        lines.append("公開してよいか判断してください。")
+            lines.append(f"⚠ The director did not sign off: {review.get('protest', '')}")
+        lines.append("Decide whether this is ready to publish.")
 
         return RequestInput(
             interruptId=interrupt_id,

@@ -1,60 +1,61 @@
-# 4分デモ台本
+# 4-minute demo script
 
-**要件**: live・unedited・約4分・GCP上で動いている証拠を含むこと。
+**Requirements**: live, unedited, about 4 minutes, includes visible proof it runs on GCP.
 
-**実測の前提**（Cloud Run、リビジョン00004、3カット・Veo1カット・リテイク1回）:
-ブリーフ投入から試写の停止まで **172秒**。内訳は企画5s → ナレーション8s →
-撮影take1 83s（Veo生成込み）→ 編集14s → 監督9s → 撮影take2 33s → 編集15s → 監督5s。
+**Measured baseline** (Cloud Run, revision 00004, 3 cuts, 1 Veo cut, 1 retake):
+**172 seconds** from submitting the brief to stopping at screening. Breakdown:
+producer 5s → narration 8s → shoot take 1 83s (including Veo generation) →
+edit 14s → director 9s → shoot take 2 33s → edit 15s → director 5s.
 
-**設計**: 走っている間に喋る。待ち時間を説明で埋めるのではなく、
-**説明したい内容が画面で起きている**状態にする。
+**Design**: talk while it's running. Don't fill the wait with explanation —
+make sure **what's being explained is what's on screen** at that moment.
 
-| 時刻 | 画面 | 話すこと | 狙う審査項目 |
+| Time | Screen | Talk track | Judging criterion targeted |
 |---|---|---|---|
-| 0:00–0:25 | 手元の映像作品 or 素材フォルダ | 「MV1本に何時間かかるか」。企画・撮影・編集・権利確認を全部ひとりでやる話 | Innovation |
-| **0:25** | ADK Web UI にブリーフを打ち込む | **ここで投げる。以降は本当に走っている** | — |
-| 0:25–1:00 | トレース画面（企画→絵コンテ→権利処理→ナレーション） | 9名のクルーとグラフ構造。権利処理が CC BY-SA を検出して作品ライセンスを決める話 | Architecture |
-| 1:00–2:00 | 撮影ノードが動いている | ナレーション実尺が絵の尺を決める設計。絵コンテが写真とVeoを選び分けている。**いまVeoが焼いている** | Innovation / ボーナス |
-| 2:00–2:30 | 編集→監督 | 監督が**実映像をGeminiに見せて**審査する。ここで点数が出る | Innovation |
-| **2:30–3:10** | **RETAKEが出て撮影に戻る** | 山場。監督が具体的に何を指摘したかを読み上げる。前回の指示を憶えていて改善を検証する話 | **Innovation 40%** |
-| 3:10–3:25 | 試写で停止 | 公開は取り返しがつかないので人間が決める。監督が承服していない場合は抗議が出る | Architecture 30% |
-| 3:25–3:40 | 承認 → YouTube に上がる | 説明欄に権利表記が入っていることを見せる | Innovation（外界への副作用） |
-| 3:40–4:00 | Cloud Run コンソール / GCS バケット | reel_t1 と reel_t2 が両方ある = リテイクが本当に別版を生んだ証拠 | **visible proof it runs on Google Cloud** |
+| 0:00–0:25 | A finished video or a folder of raw footage | How many hours one music video takes — planning, shooting, editing, rights clearance, all done solo | Innovation |
+| **0:25** | Typing the brief into the ADK Web UI | **This is where it goes live. Everything after this is really running** | — |
+| 0:25–1:00 | Trace view (producer → storyboard → rights check → narration) | The nine-member crew and the graph structure. Rights check detects CC BY-SA and it decides the film's licence | Architecture |
+| 1:00–2:00 | The camera node running | Narration length sets shot length, not the other way round. Storyboard picks stills vs. Veo per cut. **Veo is rendering right now** | Innovation / bonus |
+| 2:00–2:30 | Editor → director | The director watches the **actual assembled video** on Gemini and scores it. This is where the score lands | Innovation |
+| **2:30–3:10** | **RETAKE fires and it goes back to the camera** | The centerpiece. Read out exactly what the director flagged. It remembers its previous notes and checks whether they were addressed | **Innovation 40%** |
+| 3:10–3:25 | Stopped at screening | Publishing can't be undone, so a person decides. If the director never signed off, its objection is shown here | Architecture 30% |
+| 3:25–3:40 | Approved → goes live on YouTube | Show the licence credit in the description | Innovation (real-world side effect) |
+| 3:40–4:00 | Cloud Run console / GCS bucket | Both `reel_t1` and `reel_t2` exist — proof the retake actually produced a different version | **Visible proof it runs on Google Cloud** |
 
-## UI で確認済みの見え方（2026-08-27 実機）
+## Confirmed on the deployed UI (live run, 2026-08-27)
 
-デプロイ済みの Web UI で全経路を通した結果、本番で見せられるものが確定した。
+Ran the whole path on the deployed Web UI. Here's what's actually available to show in production.
 
-| 画面 | 見えるもの |
+| Screen | What it shows |
 |---|---|
-| Events ペイン | 各クルーの出力が読める形で流れる（企画のタイトル・テーマ・カット割り） |
-| Info ペイン | **Node Path**（`retake@1/producer@1`）と state の差分 |
-| イベント一覧 | `State: clearances, blocked_shots, work_licence`（権利処理）、`State: cuts, budget, failed_cuts`（撮影）など、**誰が何を書き換えたか** |
-| 分岐 | **`route: RETAKE`** と **`route: OK`** がボタンとして並ぶ。グラフの分岐が目で追える |
-| Artifacts タブ | `preview.mp4` が**再生可能なプレーヤー**。Version が take ごとに増える |
-| 試写 | `adk_request_input` のフォーム。監督の採点とライセンスを含む文面＋`decision` 入力欄＋Submit |
+| Events pane | Each crew member's output streams by in readable form — the producer's title, theme, cut list |
+| Info pane | The **node path** (`retake@1/producer@1`) and the state diff |
+| Event list | `State: clearances, blocked_shots, work_licence` (rights check), `State: cuts, budget, failed_cuts` (camera), etc. — **who changed what** |
+| Branches | **`route: RETAKE`** and **`route: OK`** appear as buttons — you can watch the graph branch live |
+| Artifacts tab | `preview.mp4` as a **playable video**. The version number climbs with every take |
+| Screening | The `adk_request_input` form: the director's score and licence text, a `decision` field, and Submit |
 
-`decision` は**自由入力**（enum のドロップダウンではない）。`publish` と打つ。
-`retake` なら撮影に戻り、`abandon` なら公開見送りになる。
+`decision` is **free text**, not a dropdown enum. Type `publish`. `retake`
+sends it back to the camera; `abandon` withdraws it from publication.
 
-**見せ場の順序が UI 上でそのまま並ぶ**ので、スクロールしながら説明できる。
+**The beats land in the same order the UI shows them**, so it's possible to
+narrate straight down the screen as it scrolls.
 
-## リハーサルで確認すること
+## To confirm in rehearsal
 
-- [ ] ブリーフを投げてから試写までが3分以内に収まるか（Veoの生成時間に39〜49秒の幅がある）
-- [ ] リテイクが**必ず1回は起きる**か（実測: 5回中5回発生。「水と滝の聖地を30秒で紹介して」で
-      75点→92点、「山岳信仰の聖地を30秒で」で take 3 まで、いずれも差し戻しあり）
-- [ ] YouTube のアップロードが通るか（`scripts/youtube_login.sh` 済みであること）
-- [ ] 画面共有でトレース画面の文字が読めるか
+- [ ] Does the run land at the screening gate within 3 minutes of submitting the brief (Veo generation varies 39–49s)?
+- [ ] Does a retake **fire at least once**? (Measured: 5 for 5. "Introduce sacred sites of water and waterfalls in 30 seconds" went 75 → 92; "Sacred mountain-worship sites in 30 seconds" went to take 3 — both were sent back at least once.)
+- [ ] Does the YouTube upload succeed? (Requires `scripts/youtube_login.sh` already run.)
+- [ ] Is the trace view legible over screen share?
 
-## 尺が足りなくなったときの削り所
+## Where to cut if running long
 
-1. 0:00–0:25 の導入を15秒に詰める
-2. ブリーフを2カットにする（撮影take1が約20秒短くなる）
-3. Cloud Run コンソールを最後ではなく、走っている裏で見せる
+1. Trim the 0:00–0:25 intro to 15 seconds.
+2. Drop the brief to two cuts (shoot take 1 comes in about 20 seconds shorter).
+3. Show the Cloud Run console in the background while it's running, not at the end.
 
-## 絶対に削らないもの
+## Never cut
 
-- リテイクが起きる瞬間（Innovation 40% の山場）
-- 試写で人間が承認する瞬間（Architecture 30% の核）
-- GCP上で動いている画面（提出必須）
+- The moment a retake fires (the Innovation 40% centerpiece)
+- The moment a person approves at screening (the Architecture 30% core)
+- The screen proving it's running on GCP (required for submission)

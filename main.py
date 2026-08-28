@@ -8,12 +8,36 @@ trace view depends on.
 import mimetypes
 import os
 from pathlib import Path
+from types import SimpleNamespace
+
+import graphviz
 
 from fastapi import HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
+from google.adk import Workflow
 from google.adk.cli.fast_api import get_fast_api_app
+from google.adk.cli.utils import graph_visualization
 
 from retake.services import storage
+
+PIPELINE_HTML = Path(__file__).resolve().parent / "retake" / "static" / "pipeline.html"
+
+
+class _PipelineDigraph(graphviz.Digraph):
+    """Lay the crew out left to right. ADK's workflow renderer omits rankdir,
+    so a ten-node pipeline stacks into a column that reads as a log."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.graph_attr["rankdir"] = "LR"
+
+
+graph_visualization.graphviz = SimpleNamespace(Digraph=_PipelineDigraph)
+
+# ADK 2.8.0 reads `agent._graph` when drawing the graph for a single event,
+# but Workflow exposes it as `graph`, so every per-event graph returns 500.
+if not hasattr(Workflow, "_graph"):
+    Workflow._graph = property(lambda self: self.graph)
 
 # Without a backing store ADK keeps sessions in memory on Cloud Run, so a
 # restart loses any reel waiting at the screening gate.
@@ -39,3 +63,10 @@ async def artifact(key: str) -> StreamingResponse:
         storage.stream(key),
         media_type=mimetypes.guess_type(key)[0] or "application/octet-stream",
     )
+
+
+@app.get("/pipeline")
+async def pipeline() -> FileResponse:
+    """Live pipeline monitor. Polls ADK's public session REST endpoints from
+    the browser rather than touching any ADK internals."""
+    return FileResponse(PIPELINE_HTML, media_type="text/html")

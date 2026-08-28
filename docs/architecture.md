@@ -4,88 +4,122 @@
 
 ```mermaid
 flowchart TD
-    START([ブリーフ<br/>一行の依頼]) --> P[企画<br/>Gemini 3.5]
-    P --> F[校正<br/>事実確認]
-    F --> S[絵コンテ<br/>Gemini 3.5]
-    S --> R[権利処理<br/>ライセンス判定]
-    R --> N[ナレーション<br/>Gemini TTS]
-    N --> C[撮影]
-    C --> E[編集<br/>ffmpeg]
-    E --> D[監督<br/>Gemini マルチモーダル]
+    START([Brief<br/>one-line request]) --> producer[Producer<br/>Gemini 3.5]
+    producer --> factcheck[Fact-check<br/>verification]
+    factcheck --> storyboard[Storyboard<br/>Gemini 3.5]
+    storyboard --> rights_check[Rights check<br/>licence clearance]
+    rights_check --> narration[Narration<br/>Gemini TTS]
+    narration --> camera[Camera]
+    camera --> editor[Editor<br/>ffmpeg]
+    editor --> director[Director<br/>Gemini multimodal]
 
-    C -.->|still| KB[Ken Burns]
-    C -.->|veo| VEO[Veo 3.1 Fast<br/>image-to-video]
+    camera -.->|still| KB[Ken Burns]
+    camera -.->|veo| VEO[Veo 3.1 Fast<br/>image-to-video]
 
-    D -->|RETAKE| C
-    D -->|OK| SC{{試写<br/>人間の承認}}
+    director -->|RETAKE| camera
+    director -->|OK| screening{{Screening<br/>human approval}}
 
-    SC -->|publish| PUB[配信]
-    SC -->|retake| C
-    SC -->|abandon| AB[公開見送り]
+    screening -->|PUBLISH| delivery[Delivery]
+    screening -->|RETAKE| camera
+    screening -->|ABANDON| abandoned[Abandoned]
 
-    style SC fill:#fff3cd,stroke:#d39e00,stroke-width:2px
-    style D fill:#d1ecf1,stroke:#0c5460,stroke-width:2px
-    style F fill:#d1ecf1,stroke:#0c5460,stroke-width:2px
-    style PUB fill:#d4edda,stroke:#155724
-    style AB fill:#f8d7da,stroke:#721c24
+    style screening fill:#fff3cd,stroke:#d39e00,stroke-width:2px
+    style director fill:#d1ecf1,stroke:#0c5460,stroke-width:2px
+    style factcheck fill:#d1ecf1,stroke:#0c5460,stroke-width:2px
+    style delivery fill:#d4edda,stroke:#155724
+    style abandoned fill:#f8d7da,stroke:#721c24
 ```
 
-## なぜこの形か
+## Why this shape
 
-**リテイクは撮影に戻り、Join より下流に置く。** ADK のグラフで並列を組むと `JoinNode` が
-全上流の出力を待つ。リテイクで撮影だけが再実行されると、走らない枝を待って**例外も出さずに
-停止する**。だから並列（ナレーション生成）は循環の外、撮影の前に置いた。
+**The branches are total in code, not in the graph.** ADK marks both branch
+nodes `NO DEFAULT`, and its graph cannot express a default here: a second edge
+between the same pair of nodes is rejected as a duplicate. The routes are made
+total where they are produced instead. The director's verdict comes out of an
+`if/elif/else`, so it is only ever `OK` or `RETAKE`; the screening room maps
+the human's answer with a total lookup, so anything it does not recognise
+becomes `ABANDON` rather than a route with no edge. Routing a default to some
+other node would have been worse than the warning — an unrecognised verdict
+would quietly discard the film instead of reaching a person.
 
-**ナレーションが尺を決める。** 読速は実測で約4.5文字/秒。絵コンテの見積り（6文字/秒）で
-撮ると読み切れない。先に録って実尺で撮る。
+**A retake returns to the camera, and sits downstream of the join.** In an ADK
+graph, running branches in parallel means a `JoinNode` waits on every upstream
+output. If a retake only re-runs the camera, the join waits on a branch that
+never runs again and **stalls without raising anything**. That's why the
+parallel step (narration) sits outside the loop, before the camera, not
+inside it.
 
-**否定する役は、違うレンズを持たせないと意味がない。** 監督は映像しか見ないので、
-ナレーションが正しいかは判断できない。作品は実在の神社や滝について数値と由緒を語るため、
-誤りは権利表記を落とすのと同じ種類の事故になる。校正役は原稿を素材データと突き合わせ、
-**間違っていれば実害の出る主張**（数値・固有名詞・公式な指定・由緒）だけを止める。
-情感の表現は止めない — そこまで止めると原稿が痩せる。
+**Narration sets the length, not the other way around.** A shot cut to the
+storyboard's guess at reading speed ends while the line is still being read,
+and the guess is wrong in a different direction for every language. So the
+voice is recorded first and each shot is timed to the *measured* duration of
+its audio. There is no words-per-second constant anywhere in the code.
 
-**監督は自分の指示を憶えている。** 毎回ゼロから採点する批評エージェントは収束しない
-（実測で 68→62→68 と振動した）。前回の指摘と、それが反映されたかを渡すと収束する
-（78→96）。
+**A critic only earns its keep with a different lens.** The director watches
+video, not text, so it can't judge whether the narration itself is accurate.
+The films state real numbers and history about real shrines and waterfalls,
+so a wrong claim is the same kind of failure as a missing credit. Fact-check
+cross-checks the script against the source data and blocks only **claims that
+cause real harm if wrong** — numbers, proper nouns, official designations,
+origin stories. It leaves tone and atmosphere alone; stopping those too would
+thin the script out.
 
-**監督の指示は必ず実行可能。** 撮影が持つレバー（カメラワーク・寄り・尺・露出・コントラスト）の
-範囲でしか指示を出させない。直せない指摘はループを空回りさせる。
+**The director remembers its own notes.** A critic that scores from zero
+every time doesn't converge — measured, it oscillated at 68 → 62 → 68.
+Handing it the previous notes and whether they were addressed makes it
+converge instead (78 → 96).
 
-**承認できないまま出荷しない。** テイク上限に達しても点数に届かない場合、`accepted=false` と
-監督の抗議を添えて試写に送る。人間がそれを見て決める。
+**Every note the director issues has to be actionable.** It can only direct
+within the levers the camera actually has — framing, distance, length,
+exposure, contrast. A note the camera can't act on just spins the loop in
+place.
 
-**成果物は作品であって、公開先ではない。** 配信ノードはダウンロードURL・継承したライセンス・
-帰属表示を必ず返す。YouTube は設定されていれば追加の公開先になる。
-チャンネル未設定を `published: false` と報告していた実装は、**作品が完成しているのに失敗に見えた**。
-なお試写ゲートの根拠は、取り消せない側の経路（公開）が存在することにある。
+**Nothing ships without a sign-off.** If a take still falls short of the bar
+after the retake ceiling, it goes to screening anyway, marked
+`accepted=false` with the director's objection attached. A person makes the
+final call.
 
-## 責務の分離
+**The deliverable is the film, not where it lands.** The delivery node always
+returns a download URL, the licence it inherited and the credit it owes.
+YouTube is an additional destination when a channel is configured, not the
+product itself. An earlier version reported `published: false` whenever no
+channel was configured — that made a finished film look like a failure.
+The screening gate exists because publishing is the one step in the whole
+pipeline that can't be undone.
 
-| 層 | 中身 | ADK への依存 |
+## Separation of responsibilities
+
+| Layer | Contents | Depends on ADK |
 |---|---|---|
-| `retake/agent.py` | グラフ定義（誰がいつ動くか） | あり |
-| `retake/nodes/` | クルー各員。state の読み書きと分岐 | あり |
-| `retake/services/` | 生成・描画・権利判定の純粋関数 | **なし** |
+| `retake/agent.py` | The graph definition — who runs, and when | Yes |
+| `retake/nodes/` | The crew. Reads and writes graph state, decides routes | Yes |
+| `retake/services/` | Pure functions for generation, rendering and rights checks | **No** |
 
-`services/` が ADK を知らないため、グラフが壊れてもレンダリング・生成・権利判定を単体で
-検証できる。
+Because `services/` knows nothing about ADK, rendering, generation and
+rights logic can all be tested on their own even if the graph is broken.
 
-## 状態と失敗の扱い
+## State and failure handling
 
-- **セッション**: Cloud SQL (Postgres) に永続化する。ADK は Cloud Run 上では既定で
-  セッションをメモリに置くため、再起動すると**試写で止まっているリールが消える**
-  — 実行を意図的に一時停止している唯一の場所がそこなので、ここは落とせない。
-  検証はリビジョンを入れ替えて state が読み戻せることで行った（`min-instances` に依存しない）。
-  ADK は `create_async_engine` を使うのでドライバは非同期のもの（`asyncpg`）が要る
-- **成果物**: マスターは GCS、試写用プロキシ（1/34のサイズ）だけをセッションに載せる。
-  Cloud Run のファイルシステムは tmpfs で、マスターを載せるとセッションが膨らむ。
-  配信は**ストリーミング**で返す。`Content-Length` を付けるとバッファ応答になり、
-  Cloud Run が32MB超を拒否する（アプリは200を返しているのにフロントが500にする）
-- **state のシリアライズ**: セッションは JSON で永続化され整数キーが文字列になるため、
-  index 付きデータはリストで保持する
-- **部分的失敗**: 1ロケの撮影失敗はそのカットを落とすだけで、撮影全体を止めない。
-  ナレーション失敗は無音トラックで埋める（音声欠落は以降のカットを同期ずれさせる）
-- **中間ファイル**: 差し替えられた時点で破棄する。tmpfs では溜めるとメモリを食う
-- **資格情報**: APIキーは Secret Manager から注入し、リポジトリにもコマンドラインにも置かない
-- **生成コスト**: Veo は素材とプロンプトのハッシュでキャッシュし、リテイクで再課金しない
+- **Sessions** persist to Cloud SQL (Postgres). ADK keeps sessions in memory
+  by default on Cloud Run, so a restart would **wipe a reel sitting at the
+  screening gate** — the one place the run is deliberately paused, so it's
+  the one place that can't be allowed to drop. Verified by swapping revisions
+  and confirming state reads back (independent of `min-instances`). ADK uses
+  `create_async_engine`, so the driver has to be an async one (`asyncpg`).
+- **Assets**: the master lands in GCS; only the screening proxy (1/34th the
+  size) rides along in the session. Cloud Run's filesystem is tmpfs, and
+  loading the master into it would bloat the session. Delivery streams the
+  file back — setting `Content-Length` turns it into a buffered response, and
+  Cloud Run rejects anything over 32MB (the app returns 200 while the
+  frontend sees a 500).
+- **State serialization**: sessions persist as JSON, which turns integer
+  keys into strings, so anything indexed is kept as a list instead of a dict.
+- **Partial failure**: one location failing to shoot only drops that cut, not
+  the whole shoot. A narration failure is padded with silence instead — a
+  missing track would desync every cut after it.
+- **Intermediate files** are discarded as soon as they're superseded. tmpfs
+  fills up if they're allowed to accumulate.
+- **Credentials**: API keys are injected from Secret Manager, never checked
+  into the repo or passed on a command line.
+- **Generation cost**: Veo output is cached by a hash of the source image and
+  prompt, so a retake never pays to regenerate a shot it already has.

@@ -1,4 +1,4 @@
-"""編集 — assembles the cuts and hands the reel back."""
+"""Editor — assembles the cuts and hands the reel back."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from ..services import ffmpeg_ops, storage
 async def editor(ctx: Context) -> dict:
     cuts = ctx.state.get("cuts") or []
     if not cuts:
-        raise RuntimeError("編集する素材がありません（撮影が全滅しています）")
+        raise RuntimeError("No footage to edit (every shot in the shoot failed)")
 
     cuts = sorted(cuts, key=lambda c: c["index"])
     take = ctx.state.get("take", 1)

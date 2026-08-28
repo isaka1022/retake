@@ -36,8 +36,8 @@ def configured() -> bool:
 def _credentials() -> Credentials:
     if not configured():
         raise NotConfigured(
-            f"YouTube の認証情報がありません: {TOKEN_PATH}\n"
-            "scripts/youtube_auth.py を実行してください"
+            f"No YouTube credentials found: {TOKEN_PATH}\n"
+            "Run scripts/youtube_auth.py"
         )
     data = json.loads(TOKEN_PATH.read_text())
     return Credentials(

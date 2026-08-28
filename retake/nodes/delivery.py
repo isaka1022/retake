@@ -1,4 +1,4 @@
-"""配信 — the only step that reaches outside the building.
+"""Delivery — the only step that reaches outside the building.
 
 Nothing arrives here without a person having watched the reel and said yes.
 The credits the rights node worked out travel with it, since that is where the
@@ -24,18 +24,18 @@ def _description(ctx: Context) -> str:
 
     credits = [c for c in ctx.state.get("clearances", []) if c.get("credit")]
     if credits:
-        lines.append("画像クレジット")
+        lines.append("Photo credits")
         lines += [f"  {c['spot']}: {c['credit']}" for c in credits]
         lines.append("")
 
     licence = ctx.state.get("work_licence")
     if licence:
-        lines.append(f"本作のライセンス: {licence}")
+        lines.append(f"This film is licensed under {licence}")
 
     review = ctx.state.get("review", {})
     lines += [
         "",
-        f"AIクルーが制作しました（take {review.get('take')}、監督評価 {review.get('score')}点）。",
+        f"Made by an AI film crew (take {review.get('take')}, director's score {review.get('score')}).",
     ]
     return "\n".join(lines).strip()
 
@@ -58,7 +58,7 @@ async def delivery(ctx: Context) -> dict:
     }
 
     if not youtube.configured():
-        result |= {"youtube": "未設定のため公開先はダウンロードのみ"}
+        result |= {"youtube": "Not configured; download only"}
         ctx.state["published"] = result
         return result
 
@@ -74,7 +74,7 @@ async def delivery(ctx: Context) -> dict:
     except Exception as exc:
         # A failed upload must not read as a successful release, but the film
         # is still finished and still downloadable.
-        result |= {"youtube": f"公開に失敗しました: {type(exc).__name__}: {exc}"}
+        result |= {"youtube": f"Publish failed: {type(exc).__name__}: {exc}"}
 
     ctx.state["published"] = result
     return result
@@ -85,6 +85,6 @@ async def abandoned(ctx: Context) -> dict:
     """The reel was screened and turned down. Nothing leaves the building."""
     return {
         "published": False,
-        "reason": ctx.state.get("screening", {}).get("note") or "試写で公開が見送られました",
+        "reason": ctx.state.get("screening", {}).get("note") or "Publication was declined at screening",
         "reel": ctx.state.get("delivery", {}).get("url"),
     }

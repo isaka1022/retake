@@ -14,7 +14,7 @@ sends it back.
 ## What it does
 
 You give it one line — "a 30-second film about the sacred waterfalls" — and a
-crew of nine takes it from there.
+crew of ten takes it from there.
 
 The producer picks locations and writes the narration, and a proofreader reads
 it back against the source entry — the films assert real heights, real
@@ -50,7 +50,7 @@ is a genuine pause — the run stops and waits for a human.
   screening gate
 - **Cloud Storage** — masters
 - **Secret Manager** — credentials
-- **ffmpeg** — Ken Burns with eased motion, captions in Japanese, loudness
+- **ffmpeg** — Ken Burns with eased motion, burnt-in captions, loudness
 
 ## Data
 

@@ -37,11 +37,11 @@ async def main(brief: str) -> None:
     final = await runner.session_service.get_session(
         app_name="retake", user_id="local", session_id=session.id
     )
-    print("\n=== 監督の講評 ===")
+    print("\n=== director's notes ===")
     for r in final.state.get("review_log", []):
         print(f"  take {r['take']}  score {r['score']}  -> {r['verdict']}"
               f"  (accepted={r['accepted']})"
-              f"  差し戻し {r['retakes']}")
+              f"  retakes {r['retakes']}")
         print(f"    {r['comment']}")
     print("\n=== delivery ===")
     print(final.state.get("delivery"))
@@ -49,4 +49,4 @@ async def main(brief: str) -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main(sys.argv[1] if len(sys.argv) > 1 else "水の聖地を30秒で"))
+    asyncio.run(main(sys.argv[1] if len(sys.argv) > 1 else "A 30-second film on sacred water sites"))

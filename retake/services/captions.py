@@ -4,9 +4,14 @@ from __future__ import annotations
 
 import asyncio
 import tempfile
+import textwrap
 from pathlib import Path
 
 from retake.services.ffmpeg_ops import FPS, SIZE, FfmpegError, _run
+
+# English captions run far longer per character than the Japanese source
+# text, so a line that fit at 1920px no longer does without a wrap.
+_WRAP_WIDTH = 34
 
 # Verified paths only (fc-list on each platform), not guesses.
 _FONT_CANDIDATES = [
@@ -34,19 +39,31 @@ def _font_path() -> str:
     )
 
 
-def _drawtext(text: str, font: str, *, size: int, y: str, box: bool) -> tuple[str, Path]:
+def _wrap(text: str, width: int = _WRAP_WIDTH) -> str:
+    """Wrap on word boundaries so a caption never runs off a 1920px frame."""
+    lines = textwrap.wrap(text, width=width, break_long_words=False, break_on_hyphens=False)
+    return "\n".join(lines) if lines else text
+
+
+def _drawtext(
+    text: str, font: str, *, size: int, bottom_margin: int, box: bool
+) -> tuple[str, Path]:
     # textfile= avoids drawtext's text= escaping rules for `:`, `'`, `\`, `%`,
-    # which Japanese punctuation and dashes routinely collide with.
+    # which punctuation and dashes routinely collide with.
+    text = _wrap(text)
     tmp = tempfile.NamedTemporaryFile(
         mode="w", suffix=".txt", delete=False, encoding="utf-8"
     )
     tmp.write(text)
     tmp.close()
     box_args = ":box=1:boxcolor=black@0.45:boxborderw=12" if box else ""
+    # y is anchored to the bottom of the text block via text_h, which ffmpeg
+    # computes from the actual (now possibly multi-line) rendered text, so
+    # extra wrapped lines grow upward instead of pushing the block off-frame.
     expr = (
         f"drawtext=fontfile='{font}':textfile='{tmp.name}':"
         f"fontsize={size}:fontcolor=white:borderw=2:bordercolor=black@0.8:"
-        f"x=(w-text_w)/2:y={y}{box_args}"
+        f"x=(w-text_w)/2:y=h-{bottom_margin}-text_h{box_args}"
     )
     return expr, Path(tmp.name)
 
@@ -66,13 +83,13 @@ async def burn(
     filters = []
     tmpfiles: list[Path] = []
     caption_expr, caption_file = _drawtext(
-        caption, font, size=48, y="h-140", box=True
+        caption, font, size=48, bottom_margin=80, box=True
     )
     filters.append(caption_expr)
     tmpfiles.append(caption_file)
     if credit:
         credit_expr, credit_file = _drawtext(
-            credit, font, size=22, y="h-48", box=False
+            credit, font, size=22, bottom_margin=24, box=False
         )
         credit_expr = credit_expr.replace(
             "x=(w-text_w)/2", "x=w-text_w-24"

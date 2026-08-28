@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Retake — Live Pipeline</title>
+<style>
+  :root {
+    --bg: #0b0f14;
+    --panel: #111823;
+    --border: #1f2937;
+    --border-soft: #26313f;
+    --text: #e6edf3;
+    --text-dim: #7d8b9a;
+    --text-faint: #4b5a6a;
+    --accent: #58a6ff;
+    --ok: #2ea043;
+    --ok-text: #7ee2a8;
+    --warn: #f0b429;
+    --warn-text: #ffe6a7;
+    --danger: #e5534b;
+    --hitl: #c084fc;
+    --hitl-text: #ecd9ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+  }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .wrap {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 26px;
+    gap: 10px;
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex: 0 0 auto;
+  }
+  header h1 {
+    font-size: 18px;
+    margin: 0;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+  header .sub {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+  .status-cluster {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--text-faint);
+    display: inline-block;
+    margin-right: 6px;
+  }
+  .dot.live { background: var(--warn); box-shadow: 0 0 6px var(--warn); animation: blink 1.6s ease-in-out infinite; }
+  .dot.waiting { background: var(--hitl); box-shadow: 0 0 8px var(--hitl); animation: blink 1s ease-in-out infinite; }
+  .dot.finished { background: var(--ok); }
+  .dot.finished-abandoned { background: var(--text-dim); }
+  .dot.idle { background: var(--text-faint); }
+  .dot.dead { background: var(--danger); }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+  .status-chip {
+    background: var(--panel);
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 13px;
+    transition: border-color 0.3s, background 0.3s;
+  }
+  .status-chip .label { color: var(--text-dim); margin-right: 6px; }
+  .status-chip .val { font-weight: 600; color: var(--text); }
+  .status-chip.chip-running { border-color: var(--warn); }
+  .status-chip.chip-running .val { color: var(--warn-text); }
+  .status-chip.chip-waiting {
+    border-color: var(--hitl);
+    background: rgba(192, 132, 252, 0.12);
+    animation: chipPulse 1.6s ease-in-out infinite;
+  }
+  .status-chip.chip-waiting .val { color: var(--hitl-text); }
+  .status-chip.chip-finished { border-color: var(--ok); }
+  .status-chip.chip-finished .val { color: var(--ok-text); }
+  .status-chip.chip-finished-abandoned { border-color: var(--text-dim); }
+  .status-chip.chip-finished-abandoned .val { color: var(--text-dim); }
+  @keyframes chipPulse {
+    0%, 100% { box-shadow: 0 0 0 rgba(192, 132, 252, 0); }
+    50% { box-shadow: 0 0 14px rgba(192, 132, 252, 0.5); }
+  }
+
+  main {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+  }
+  #pipeline-container {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+  }
+  #pipeline-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .node-box rect { stroke-width: 1.6; transition: fill 0.3s, stroke 0.3s; }
+  .node-box text.label {
+    font-size: 24px;
+    font-weight: 600;
+    text-anchor: middle;
+    dominant-baseline: middle;
+    transition: fill 0.3s;
+  }
+  .node-box.pending rect { fill: #131a23; stroke: var(--border-soft); }
+  .node-box.pending text.label { fill: var(--text-faint); }
+  .node-box.done rect { fill: #10251b; stroke: var(--ok); }
+  .node-box.done text.label { fill: var(--ok-text); }
+  .node-box.active rect {
+    fill: #2a2110;
+    stroke: var(--warn);
+    animation: pulseGlow 1.3s ease-in-out infinite;
+  }
+  .node-box.active text.label { fill: var(--warn-text); }
+  .node-box.waiting rect {
+    fill: #23103b;
+    stroke: var(--hitl);
+    stroke-width: 2.4;
+    animation: pulseHitl 1.4s ease-in-out infinite;
+  }
+  .node-box.waiting text.label { fill: var(--hitl-text); }
+  @keyframes pulseGlow {
+    0%, 100% { filter: drop-shadow(0 0 0px rgba(240,180,41,0)); }
+    50% { filter: drop-shadow(0 0 9px rgba(240,180,41,0.85)); }
+  }
+  @keyframes pulseHitl {
+    0%, 100% { filter: drop-shadow(0 0 0px rgba(192,132,252,0)); }
+    50% { filter: drop-shadow(0 0 14px rgba(192,132,252,0.9)); }
+  }
+
+  .badge { opacity: 0; transition: opacity 0.2s; }
+  .badge.show { opacity: 1; }
+  .badge circle { fill: var(--warn); }
+  .badge text { font-size: 17px; font-weight: 700; fill: #1a1300; text-anchor: middle; dominant-baseline: middle; }
+
+  .hitl-badge { opacity: 0; transition: opacity 0.2s; }
+  .hitl-badge.show { opacity: 1; }
+  .hitl-badge circle { fill: var(--hitl); }
+  .hitl-badge text { font-size: 20px; text-anchor: middle; dominant-baseline: middle; }
+
+  .fwd-arrow { stroke: #374151; stroke-width: 2; }
+  .branch-line { stroke: #374151; stroke-width: 1.6; stroke-dasharray: 4 3; }
+  .branch-line.hit { stroke: var(--text-dim); stroke-dasharray: none; }
+
+  .retake-arc { fill: none; stroke: #374151; stroke-width: 2; stroke-dasharray: 5 4; }
+  .retake-arc.hot {
+    stroke: var(--warn);
+    stroke-width: 3;
+    stroke-dasharray: none;
+    filter: drop-shadow(0 0 5px rgba(240,180,41,0.55));
+  }
+  .retake-arc.hot.current { stroke-dasharray: 9 5; animation: dashFlow 0.9s linear infinite; }
+  @keyframes dashFlow {
+    0% { stroke-dashoffset: 0; }
+    100% { stroke-dashoffset: -18; }
+  }
+
+  .arc-label-bg { fill: var(--panel); stroke: var(--border-soft); stroke-width: 1; }
+  .arc-label { font-size: 18px; fill: var(--text-faint); text-anchor: middle; dominant-baseline: middle; }
+  .arc-label.hot { fill: var(--warn-text); }
+
+  .panels {
+    flex: 0 0 auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    align-items: start;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px 14px;
+    overflow: auto;
+    max-height: 240px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .card h2 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-dim);
+    margin: 0 0 8px 0;
+    font-weight: 600;
+  }
+  .card .empty { color: var(--text-faint); font-size: 13px; }
+
+  .take-big {
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .take-sub { color: var(--text-dim); font-size: 12px; margin-top: 6px; }
+  .take-dots { display: flex; gap: 6px; margin-top: 12px; }
+  .take-dots .pip { width: 10px; height: 10px; border-radius: 50%; background: var(--border-soft); }
+  .take-dots .pip.filled { background: var(--warn); }
+
+  .score-entry { padding: 5px 0; border-bottom: 1px solid var(--border); }
+  .score-entry:last-child { border-bottom: none; }
+  .score-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+  }
+  .score-row .take-no { color: var(--text-dim); }
+  .score-row .score-val { font-weight: 700; }
+  .score-row .verdict {
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+  }
+  .verdict.OK { background: rgba(46,160,67,0.18); color: var(--ok-text); }
+  .verdict.RETAKE { background: rgba(240,180,41,0.18); color: var(--warn-text); }
+  .score-comment {
+    font-size: 11px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+  }
+
+  .kv { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; gap: 10px; }
+  .kv .k { color: var(--text-dim); flex: 0 0 auto; }
+  .kv .v { text-align: right; }
+  .missing-list { color: var(--danger); font-size: 12px; margin-top: 4px; }
+
+  .budget-bar-track {
+    height: 8px;
+    border-radius: 4px;
+    background: var(--border-soft);
+    overflow: hidden;
+    margin: 8px 0 4px 0;
+  }
+  .budget-bar-fill { height: 100%; background: var(--accent); }
+  .budget-bar-fill.warn { background: var(--warn); }
+  .budget-bar-fill.danger { background: var(--danger); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Retake — Live Pipeline</h1>
+      <div class="sub" id="session-sub">connecting…</div>
+    </div>
+    <div class="status-cluster">
+      <div class="status-chip" id="status-chip">
+        <span class="label" id="status-chip-label">status</span>
+        <span class="val" id="status-chip-val">—</span>
+      </div>
+      <div><span class="dot" id="conn-dot"></span><span id="conn-text">connecting</span></div>
+    </div>
+  </header>
+  <main>
+    <div id="pipeline-container">
+      <svg id="pipeline-svg" viewBox="0 120 1600 726" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <section class="panels">
+      <div class="card" id="card-take">
+        <h2>Take</h2>
+        <div id="take-body"><div class="empty">waiting for data…</div></div>
+      </div>
+      <div class="card" id="card-scores">
+        <h2>Director's Score History</h2>
+        <div id="scores-body"><div class="empty">no reviews yet</div></div>
+      </div>
+      <div class="card" id="card-delivery">
+        <h2>Delivery</h2>
+        <div id="delivery-body"><div class="empty">no delivery yet</div></div>
+      </div>
+      <div class="card" id="card-budget">
+        <h2>Budget</h2>
+        <div id="budget-body"><div class="empty">no spend yet</div></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+// Node order mirrors the edges list in retake/agent.py.
+const NODES = [
+  { id: "producer", label: "Producer" },
+  { id: "factcheck", label: "Fact Check" },
+  { id: "storyboard", label: "Storyboard" },
+  { id: "rights_check", label: "Rights" },
+  { id: "narration", label: "Narration" },
+  { id: "camera", label: "Camera" },
+  { id: "editor", label: "Editor" },
+  { id: "director", label: "Director" },
+  { id: "screening", label: "Screening" },
+  { id: "delivery", label: "Delivery" },
+];
+const ABANDONED = { id: "abandoned", label: "Abandoned" };
+
+const SVG_W = 1600;
+const ROW_Y = 588;
+const BOX_W = 122;
+const BOX_H = 182;
+const MARGIN_X = 42;
+const SLOT = (SVG_W - 2 * MARGIN_X) / NODES.length;
+
+function cx(i) { return MARGIN_X + SLOT * i + SLOT / 2; }
+
+const idx = {};
+NODES.forEach((n, i) => (idx[n.id] = i));
+
+const nodeEls = {};
+
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(SVG_NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+
+function buildDefs(svg) {
+  const defs = el("defs", {}, svg);
+  const m = el("marker", {
+    id: "arrow-fwd", viewBox: "0 0 10 10", refX: "8", refY: "5",
+    markerWidth: "7", markerHeight: "7", orient: "auto",
+  }, defs);
+  el("path", { d: "M0,0 L10,5 L0,10 Z", fill: "#374151" }, m);
+}
+
+function buildForwardArrows(svg) {
+  for (let i = 0; i < NODES.length - 1; i++) {
+    el("line", {
+      class: "fwd-arrow",
+      x1: cx(i) + BOX_W / 2, y1: ROW_Y,
+      x2: cx(i + 1) - BOX_W / 2 - 8, y2: ROW_Y,
+      "marker-end": "url(#arrow-fwd)",
+    }, svg);
+  }
+}
+
+// Both retake arcs land on the exact same point atop the camera box. Nesting
+// them there (wider span drawn with a taller apex) keeps them from crossing,
+// instead of the two independent curves that used to collide near the
+// abandoned branch below the row.
+function buildRetakeArc(svg, fromId, apexY, labelY, text) {
+  const x1 = cx(idx[fromId]);
+  const x0 = cx(idx.camera);
+  const yTop = ROW_Y - BOX_H / 2;
+  const d = `M ${x1} ${yTop} C ${x1} ${apexY} ${x0} ${apexY} ${x0} ${yTop}`;
+  const path = el("path", { class: "retake-arc", d, "marker-end": "url(#arrow-fwd)" }, svg);
+
+  const labelX = (x1 + x0) / 2;
+  const bg = el("rect", { class: "arc-label-bg", rx: 4 }, svg);
+  const label = el("text", { class: "arc-label", x: labelX, y: labelY }, svg);
+  label.textContent = text;
+  const bbox = label.getBBox();
+  bg.setAttribute("x", bbox.x - 7);
+  bg.setAttribute("y", bbox.y - 3);
+  bg.setAttribute("width", bbox.width + 14);
+  bg.setAttribute("height", bbox.height + 6);
+
+  return { path, label, bg };
+}
+
+function buildAbandonedBranch(svg) {
+  const sx = cx(idx.screening);
+  const topY = ROW_Y + BOX_H / 2;
+  const abY = 784;
+  el("line", {
+    id: "branch-abandoned",
+    class: "branch-line",
+    x1: sx, y1: topY, x2: sx, y2: abY - 43,
+    "marker-end": "url(#arrow-fwd)",
+  }, svg);
+  const g = el("g", { class: "node-box pending", id: "node-abandoned" }, svg);
+  el("rect", {
+    x: sx - 78, y: abY - 43, width: 156, height: 86, rx: 10,
+  }, g);
+  el("text", { class: "label", x: sx, y: abY }, g).textContent = ABANDONED.label;
+  nodeEls.abandoned = { group: g };
+}
+
+function buildNode(svg, n, i) {
+  const x = cx(i);
+  const g = el("g", { class: "node-box pending", id: `node-${n.id}` }, svg);
+  el("rect", { x: x - BOX_W / 2, y: ROW_Y - BOX_H / 2, width: BOX_W, height: BOX_H, rx: 9 }, g);
+  el("text", { class: "label", x, y: ROW_Y }, g).textContent = n.label;
+
+  const badge = el("g", { class: "badge" }, svg);
+  el("circle", { cx: x + BOX_W / 2 - 2, cy: ROW_Y - BOX_H / 2 - 2, r: 22 }, badge);
+  const badgeText = el("text", { x: x + BOX_W / 2 - 4, y: ROW_Y - BOX_H / 2 - 2 }, badge);
+
+  const entry = { group: g, badge, badgeText };
+
+  // Screening is the only node that can be "waiting for approval" — its
+  // pause badge sits on the opposite corner from the take badge.
+  if (n.id === "screening") {
+    const hitl = el("g", { class: "hitl-badge" }, svg);
+    el("circle", { cx: x - BOX_W / 2 + 2, cy: ROW_Y - BOX_H / 2 - 2, r: 22 }, hitl);
+    el("text", { x: x - BOX_W / 2 + 4, y: ROW_Y - BOX_H / 2 - 1 }, hitl).textContent = "⏸";
+    entry.hitlBadge = hitl;
+  }
+
+  nodeEls[n.id] = entry;
+}
+
+function buildSvg() {
+  const svg = document.getElementById("pipeline-svg");
+  buildDefs(svg);
+  buildForwardArrows(svg);
+  NODES.forEach((n, i) => buildNode(svg, n, i));
+  buildAbandonedBranch(svg);
+  // Screening's back-edge spans further than director's, so it is drawn
+  // both wider and taller (smaller apexY = higher) to nest around it.
+  const arcDirector = buildRetakeArc(svg, "director", 301, 336, "director retake");
+  const arcScreening = buildRetakeArc(svg, "screening", 119, 154, "screening retake");
+  return { arcDirector, arcScreening };
+}
+
+const arcs = buildSvg();
+
+// --- data layer -----------------------------------------------------------
+
+const params = new URLSearchParams(location.search);
+const APP = params.get("app") || "retake";
+const USER = params.get("user") || "user";
+const PINNED_SESSION = params.get("session") || null;
+const POLL_MS = 2000;
+
+function timeAgo(epochSeconds) {
+  if (!epochSeconds) return "unknown";
+  const secs = Math.max(0, Math.round(Date.now() / 1000 - epochSeconds));
+  if (secs < 2) return "just now";
+  if (secs < 60) return `${secs}s ago`;
+  return `${Math.round(secs / 60)}m ago`;
+}
+
+// Parse every event's nodeInfo.path ("retake@1/camera@2") into
+// {name, take, author}, keeping array position so later logic can tell
+// what happened before/after a given event without re-parsing.
+function parseEvents(events) {
+  return (events || []).map((e) => {
+    const path = (e.nodeInfo && e.nodeInfo.path) || "";
+    if (!path) return { name: null, take: null, author: e.author };
+    const lastSeg = path.split("/").pop();
+    const at = lastSeg.lastIndexOf("@");
+    if (at < 0) return { name: null, take: null, author: e.author };
+    const take = parseInt(lastSeg.slice(at + 1), 10);
+    if (Number.isNaN(take)) return { name: null, take: null, author: e.author };
+    return { name: lastSeg.slice(0, at), take, author: e.author };
+  });
+}
+
+function deriveNodeState(parsed) {
+  const maxTake = {};
+  let lastNode = null;
+  for (const p of parsed) {
+    if (!p.name) continue;
+    if (!(p.name in maxTake) || p.take > maxTake[p.name]) maxTake[p.name] = p.take;
+    lastNode = p.name;
+  }
+  return { maxTake, lastNode };
+}
+
+// Verified against production sessions (see report): a session sitting on
+// screening with no `user`-authored event since that screening round began
+// is genuinely waiting on a human. Once the human answers, screening reruns
+// (rerun_on_resume=True) a couple more times before routing on — at that
+// point a `user` event already exists after the round started, so it reads
+// as "running" rather than "waiting" again.
+function deriveSessionStatus(parsed, maxTake, lastNode) {
+  if (!lastNode) return "idle";
+  if (lastNode === "delivery") return "finished-published";
+  if (lastNode === "abandoned") return "finished-abandoned";
+  if (lastNode === "screening") {
+    const screeningTake = maxTake.screening || 1;
+    const firstIdx = parsed.findIndex((p) => p.name === "screening" && p.take === screeningTake);
+    const answeredSince = firstIdx >= 0 && parsed.slice(firstIdx + 1).some((p) => p.author === "user");
+    return answeredSince ? "running" : "waiting-approval";
+  }
+  return "running";
+}
+
+function nodeVisualStatus(id, status, maxTake, lastNode) {
+  if (!(id in maxTake)) return "pending";
+  if (id !== lastNode) return "done";
+  if (status === "waiting-approval") return "waiting";
+  if (status === "finished-published" || status === "finished-abandoned") return "done";
+  return "active";
+}
+
+function applyNodeStates(status, maxTake, lastNode) {
+  const allIds = NODES.map((n) => n.id).concat([ABANDONED.id]);
+  for (const id of allIds) {
+    const { group, badge, badgeText, hitlBadge } = nodeEls[id];
+    const vstatus = nodeVisualStatus(id, status, maxTake, lastNode);
+    group.setAttribute("class", `node-box ${vstatus}`);
+
+    if (badge) {
+      const take = maxTake[id] || 0;
+      badge.setAttribute("class", "badge" + (take > 1 ? " show" : ""));
+      if (take > 1) badgeText.textContent = "t" + take;
+    }
+    if (hitlBadge) {
+      hitlBadge.setAttribute("class", "hitl-badge" + (vstatus === "waiting" ? " show" : ""));
+    }
+  }
+  const abLine = document.getElementById("branch-abandoned");
+  abLine.setAttribute("class", "branch-line" + (ABANDONED.id in maxTake ? " hit" : ""));
+}
+
+function applyRetakeArcs(reviewLog, screeningState, lastNode, maxTake) {
+  const directorHot = (reviewLog || []).some((r) => r.verdict === "RETAKE");
+  const screeningHot = screeningState && screeningState.decision === "retake";
+  const cameraRetaking = lastNode === "camera" && (maxTake.camera || 0) > 1;
+
+  arcs.arcDirector.path.setAttribute(
+    "class", `retake-arc${directorHot ? " hot" : ""}${directorHot && cameraRetaking ? " current" : ""}`
+  );
+  arcs.arcDirector.label.setAttribute("class", "arc-label" + (directorHot ? " hot" : ""));
+
+  arcs.arcScreening.path.setAttribute(
+    "class", `retake-arc${screeningHot ? " hot" : ""}${screeningHot && cameraRetaking ? " current" : ""}`
+  );
+  arcs.arcScreening.label.setAttribute("class", "arc-label" + (screeningHot ? " hot" : ""));
+}
+
+function applyHeaderStatus(status, lastNode, maxTake) {
+  const dot = document.getElementById("conn-dot");
+  const connText = document.getElementById("conn-text");
+  const chip = document.getElementById("status-chip");
+  const chipLabel = document.getElementById("status-chip-label");
+  const chipVal = document.getElementById("status-chip-val");
+
+  chip.className = "status-chip";
+  if (status === "idle") {
+    dot.className = "dot idle";
+    connText.textContent = "waiting for a session";
+    chipLabel.textContent = "status";
+    chipVal.textContent = "—";
+  } else if (status === "waiting-approval") {
+    dot.className = "dot waiting";
+    connText.textContent = "awaiting approval";
+    chip.classList.add("chip-waiting");
+    chipLabel.textContent = "human-in-the-loop";
+    chipVal.textContent = "waiting for approval";
+  } else if (status === "finished-published") {
+    dot.className = "dot finished";
+    connText.textContent = "finished";
+    chip.classList.add("chip-finished");
+    chipLabel.textContent = "status";
+    chipVal.textContent = "finished — published";
+  } else if (status === "finished-abandoned") {
+    dot.className = "dot finished-abandoned";
+    connText.textContent = "finished";
+    chip.classList.add("chip-finished-abandoned");
+    chipLabel.textContent = "status";
+    chipVal.textContent = "finished — abandoned";
+  } else {
+    dot.className = "dot live";
+    connText.textContent = "live";
+    chip.classList.add("chip-running");
+    chipLabel.textContent = "now running";
+    chipVal.textContent = lastNode
+      ? `${NODE_LABELS[lastNode] || lastNode}${(maxTake[lastNode] || 0) > 1 ? " (take " + maxTake[lastNode] + ")" : ""}`
+      : "—";
+  }
+}
+
+function setConnDead() {
+  document.getElementById("conn-dot").className = "dot dead";
+  document.getElementById("conn-text").textContent = "connection lost";
+}
+
+function renderTakeCard(state) {
+  const body = document.getElementById("take-body");
+  const take = state.take;
+  body.innerHTML = "";
+  if (!take) { body.appendChild(mkEmpty("waiting for data…")); return; }
+  const big = document.createElement("div");
+  big.className = "take-big mono";
+  big.textContent = "Take " + take;
+  body.appendChild(big);
+  const sub = document.createElement("div");
+  sub.className = "take-sub";
+  const log = state.review_log || [];
+  sub.textContent = `${log.length} review${log.length === 1 ? "" : "s"} so far`;
+  body.appendChild(sub);
+  const dots = document.createElement("div");
+  dots.className = "take-dots";
+  const MAX_TAKES = 3;
+  for (let i = 1; i <= MAX_TAKES; i++) {
+    const pip = document.createElement("div");
+    pip.className = "pip" + (i <= take ? " filled" : "");
+    dots.appendChild(pip);
+  }
+  body.appendChild(dots);
+}
+
+function mkEmpty(text) {
+  const d = document.createElement("div");
+  d.className = "empty";
+  d.textContent = text;
+  return d;
+}
+
+function truncate(text, max) {
+  if (!text) return "";
+  return text.length > max ? text.slice(0, max - 1) + "…" : text;
+}
+
+function renderScoresCard(state) {
+  const body = document.getElementById("scores-body");
+  const log = state.review_log || [];
+  body.innerHTML = "";
+  if (!log.length) { body.appendChild(mkEmpty("no reviews yet")); return; }
+  for (const r of log) {
+    const entry = document.createElement("div");
+    entry.className = "score-entry";
+
+    const row = document.createElement("div");
+    row.className = "score-row";
+    const left = document.createElement("span");
+    left.className = "take-no mono";
+    left.textContent = "take " + r.take;
+    const score = document.createElement("span");
+    score.className = "score-val mono";
+    score.textContent = r.score != null ? r.score : "—";
+    const verdict = document.createElement("span");
+    verdict.className = "verdict " + (r.verdict || "");
+    verdict.textContent = r.verdict || "";
+    row.appendChild(left);
+    row.appendChild(score);
+    row.appendChild(verdict);
+    entry.appendChild(row);
+
+    if (r.comment) {
+      const comment = document.createElement("div");
+      comment.className = "score-comment";
+      comment.textContent = truncate(r.comment, 90);
+      comment.title = r.comment;
+      entry.appendChild(comment);
+    }
+
+    body.appendChild(entry);
+  }
+}
+
+function kvRow(container, k, v) {
+  const row = document.createElement("div");
+  row.className = "kv";
+  const kEl = document.createElement("span");
+  kEl.className = "k";
+  kEl.textContent = k;
+  const vEl = document.createElement("span");
+  vEl.className = "v mono";
+  vEl.textContent = v;
+  row.appendChild(kEl);
+  row.appendChild(vEl);
+  container.appendChild(row);
+}
+
+function renderDeliveryCard(state) {
+  const body = document.getElementById("delivery-body");
+  const d = state.delivery;
+  body.innerHTML = "";
+  if (!d) { body.appendChild(mkEmpty("no delivery yet")); return; }
+  if (d.title) kvRow(body, "title", d.title);
+  kvRow(body, "take", d.take != null ? d.take : "—");
+  kvRow(body, "cuts", `${d.cuts != null ? d.cuts : "—"} / ${d.planned_cuts != null ? d.planned_cuts : "—"} planned`);
+  kvRow(body, "seconds", d.seconds != null ? d.seconds : "—");
+  const missing = d.missing_cuts || [];
+  if (missing.length) {
+    const m = document.createElement("div");
+    m.className = "missing-list";
+    m.textContent = `⚠ missing cuts: ${missing.join(", ")}`;
+    body.appendChild(m);
+  }
+}
+
+function renderBudgetCard(state) {
+  const body = document.getElementById("budget-body");
+  const b = state.budget;
+  body.innerHTML = "";
+  if (!b) { body.appendChild(mkEmpty("no spend yet")); return; }
+  const spent = b.spent_usd || 0;
+  const ceiling = b.ceiling_usd || 0;
+  const pct = ceiling > 0 ? Math.min(100, (spent / ceiling) * 100) : 0;
+  kvRow(body, "spent", "$" + spent.toFixed(2));
+  kvRow(body, "ceiling", "$" + ceiling.toFixed(2));
+  kvRow(body, "remaining", "$" + Math.max(0, ceiling - spent).toFixed(2));
+  const track = document.createElement("div");
+  track.className = "budget-bar-track";
+  const fill = document.createElement("div");
+  fill.className = "budget-bar-fill" + (pct > 90 ? " danger" : pct > 60 ? " warn" : "");
+  fill.style.width = pct + "%";
+  track.appendChild(fill);
+  body.appendChild(track);
+}
+
+const NODE_LABELS = {};
+NODES.forEach((n) => (NODE_LABELS[n.id] = n.label));
+NODE_LABELS[ABANDONED.id] = ABANDONED.label;
+
+function renderWaiting() {
+  document.getElementById("session-sub").textContent = `no active session for app=${APP} user=${USER}`;
+  applyNodeStates("idle", {}, null);
+  applyRetakeArcs([], null, null, {});
+  applyHeaderStatus("idle", null, {});
+  renderTakeCard({});
+  renderScoresCard({});
+  renderDeliveryCard({});
+  renderBudgetCard({});
+}
+
+function render(session) {
+  const state = session.state || {};
+  const parsed = parseEvents(session.events);
+  const { maxTake, lastNode } = deriveNodeState(parsed);
+  const status = deriveSessionStatus(parsed, maxTake, lastNode);
+
+  applyNodeStates(status, maxTake, lastNode);
+  applyRetakeArcs(state.review_log, state.screening, lastNode, maxTake);
+  applyHeaderStatus(status, lastNode, maxTake);
+
+  document.getElementById("session-sub").textContent =
+    `session ${session.id} · updated ${timeAgo(session.lastUpdateTime)}`;
+
+  renderTakeCard(state);
+  renderScoresCard(state);
+  renderDeliveryCard(state);
+  renderBudgetCard(state);
+}
+
+async function poll() {
+  try {
+    const listRes = await fetch(`/apps/${APP}/users/${USER}/sessions`);
+    if (!listRes.ok) throw new Error("sessions list " + listRes.status);
+    const sessions = await listRes.json();
+
+    let target = null;
+    if (PINNED_SESSION) {
+      target = sessions.find((s) => s.id === PINNED_SESSION) || null;
+    } else if (sessions.length) {
+      target = sessions.reduce((a, b) => (b.lastUpdateTime > a.lastUpdateTime ? b : a));
+    }
+    if (!target) { renderWaiting(); return; }
+
+    const detRes = await fetch(`/apps/${APP}/users/${USER}/sessions/${target.id}`);
+    if (!detRes.ok) throw new Error("session detail " + detRes.status);
+    const session = await detRes.json();
+
+    render(session);
+  } catch (err) {
+    setConnDead();
+    console.error(err);
+  }
+}
+
+poll();
+setInterval(poll, POLL_MS);
+</script>
+</body>
+</html>

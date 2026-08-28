@@ -42,13 +42,13 @@ async def main(brief: str, decision: str) -> None:
             print("[ERROR]", event.author, event.error_message)
 
     if not pending:
-        print("試写で止まりませんでした（割り込みが出ていません）")
+        print("Did not stop at screening (no interrupt was raised)")
         return
 
     interrupt_id, message = pending
-    print("=== 試写で停止しました ===")
+    print("=== stopped at screening ===")
     print(message)
-    print(f"\n--- 人間の判断: {decision} ---\n")
+    print(f"\n--- human decision: {decision} ---\n")
 
     reply = types.Content(
         role="user",
@@ -57,7 +57,7 @@ async def main(brief: str, decision: str) -> None:
                 function_response=types.FunctionResponse(
                     id=interrupt_id,
                     name=REQUEST_INPUT,
-                    response={"decision": decision, "note": "試写の結果"},
+                    response={"decision": decision, "note": "Screening result"},
                 )
             )
         ],
@@ -69,14 +69,14 @@ async def main(brief: str, decision: str) -> None:
     final = await runner.session_service.get_session(
         app_name="retake", user_id="local", session_id=session.id
     )
-    print("再開後の判断:", final.state.get("screening"))
+    print("Decision after resume:", final.state.get("screening"))
     print("delivery:", final.state.get("delivery"))
 
 
 if __name__ == "__main__":
     asyncio.run(
         main(
-            sys.argv[1] if len(sys.argv) > 1 else "水と滝の聖地を30秒で",
+            sys.argv[1] if len(sys.argv) > 1 else "A 30-second film on sacred water and waterfall sites",
             sys.argv[2] if len(sys.argv) > 2 else "publish",
         )
     )

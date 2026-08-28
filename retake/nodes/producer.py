@@ -1,4 +1,4 @@
-"""企画 — turns a one-line brief into a shot plan."""
+"""Producer — turns a one-line brief into a shot plan."""
 
 from __future__ import annotations
 
@@ -7,9 +7,10 @@ from google.adk.workflow import node
 
 from ..services import catalog, gemini
 
-SYSTEM = """あなたは短編ドキュメンタリーの構成作家です。
-与えられたロケ地リストから、依頼に合う場所だけを選び、30秒前後の映像の構成を書きます。
-ナレーションは一文が長すぎないこと。事実に基づき、誇張しないこと。"""
+SYSTEM = """You are the writer for a short documentary.
+The location list you are given is in Japanese: read it carefully, then choose only the
+locations that fit the brief and write the roughly 30-second film plan in English.
+Keep narration sentences short. Stay factual and avoid exaggeration."""
 
 SCHEMA = {
     "type": "object",
@@ -32,7 +33,7 @@ SCHEMA = {
     "required": ["title", "theme", "cuts"],
 }
 
-DEFAULT_BRIEF = "日本のパワースポットを30秒で紹介する"
+DEFAULT_BRIEF = "Introduce Japan's power spots in 30 seconds"
 
 
 def _brief(ctx: Context) -> str:
@@ -48,9 +49,11 @@ def _brief(ctx: Context) -> str:
 async def producer(ctx: Context) -> dict:
     brief = _brief(ctx)
     plan = await gemini.structured(
-        f"依頼: {brief}\n\n"
-        f"選べるロケ地:\n{catalog.brief_for_llm()}\n\n"
-        "3〜4か所を選び、各カットのナレーションと画づくりの意図を書いてください。",
+        f"Brief: {brief}\n\n"
+        f"Available locations (source material is in Japanese, write your answer in English):\n"
+        f"{catalog.brief_for_llm()}\n\n"
+        "Choose 3 to 4 locations. For each cut, write the narration and describe the "
+        "visual intent, in English.",
         SCHEMA,
         system=SYSTEM,
     )

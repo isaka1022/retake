@@ -1,4 +1,4 @@
-"""監督 — watches the cut and decides whether it ships.
+"""Director — watches the cut and decides whether it ships.
 
 The review is a real one: the reel is handed to Gemini as video, not described
 to it. Every note carries the full replacement setup, so a retake is always
@@ -18,20 +18,31 @@ from ..services import gemini
 QUALITY_BAR = 70
 MAX_TAKES = 3
 
-SYSTEM = """あなたは短編映像の監督です。妥協せず、具体的に指摘します。
-使えるのは素材写真1枚からのカメラワークと露出調整だけです。
-撮り直しの指示は必ずこの2つの範囲で出してください。実現できない要求は書きません。
+SYSTEM = """You are the director of a short film. You do not compromise, and you are specific.
+All you have to work with is camera work and exposure adjustment applied to a single
+still photo. Every retake instruction must stay within those two levers — never write a
+request the crew cannot execute.
 
-あなたは自分が前回出した指示を憶えています。撮り直しの回では、粗探しを最初からやり直すのではなく
-「前回の指摘は解消したか」「前回より良くなったか」で判断してください。
-素材の限界でこれ以上良くならないと判断したなら、完璧でなくても ship してください。
-同じ指摘を3回繰り返すのは、指示が悪いか、素材の限界です。"""
+You remember the notes you gave last time. On a retake pass, do not start the critique
+from scratch: judge whether the previous notes were addressed and whether the cut
+improved. If the material has hit its limit and cannot get any better, ship it even if
+it is not perfect. Repeating the same note three times means either the instruction was
+wrong or the material has hit its limit.
+
+Write comment and every note's problem in English, in concrete terms a crew member could
+act on."""
 
 NOTE = {
     "type": "object",
     "properties": {
         "cut_index": {"type": "integer"},
-        "problem": {"type": "string"},
+        "problem": {
+            "type": "string",
+            "description": (
+                "A concrete, specific problem with this cut, in English, that a crew "
+                "member could act on — not a vague or generic remark."
+            ),
+        },
         "motion": {"type": "string", "enum": ["push_in", "pan_left", "pan_right"]},
         "zoom_to": {"type": "number"},
         "seconds": {"type": "number"},
@@ -48,26 +59,33 @@ SCHEMA = {
     "properties": {
         "score": {"type": "integer"},
         "decision": {"type": "string", "enum": ["ship", "retake"]},
-        "comment": {"type": "string"},
+        "comment": {
+            "type": "string",
+            "description": (
+                "The director's overall verdict, in English, specific enough that a "
+                "judge reading it understands exactly what worked and what did not."
+            ),
+        },
         "notes": {"type": "array", "items": NOTE},
     },
     "required": ["score", "decision", "comment", "notes"],
 }
 
-PROMPT = """この映像を審査してください。カットの割りと今回の設定は以下のとおりです。
+PROMPT = """Review this cut. The shot breakdown and current settings are below.
 
 {sheet}
 {missing}{history}
-100点満点で採点し、出すか撮り直すかを decision で答えてください。
-撮り直すなら、直すべきカットに指示を出します。
-指示には必ず次をすべて含めてください。
-- motion: カメラワーク
-- zoom_to: 寄りの強さ 1.02〜1.40
-- seconds: 尺 3〜12
-- exposure: 明るさ補正 -0.30〜0.30（白飛びは負の値で抑える）
-- contrast: コントラスト 0.80〜1.30
+Score it out of 100, and give your decision (ship or retake) in decision.
+If retake, issue instructions for the cuts that need fixing. Every instruction must
+include all of the following:
+- motion: camera move
+- zoom_to: how tight the push is, 1.02-1.40
+- seconds: duration, 3-12
+- exposure: brightness correction, -0.30 to 0.30 (use a negative value to pull back a
+  blown-out highlight)
+- contrast: contrast, 0.80-1.30
 
-問題がなければ notes は空にしてください。"""
+If there is nothing wrong, leave notes empty."""
 
 
 def _history(log: list[dict]) -> str:
@@ -75,15 +93,15 @@ def _history(log: list[dict]) -> str:
     scratch and the loop never converges."""
     if not log:
         return ""
-    lines = ["\nこれまでのあなたの判断:"]
+    lines = ["\nYour previous decisions:"]
     for r in log:
-        asked = "、".join(
-            f"カット{n['cut_index']}（{n['problem']}）" for n in r.get("issued", [])
+        asked = ", ".join(
+            f"cut {n['cut_index']} ({n['problem']})" for n in r.get("issued", [])
         )
-        lines.append(f"  take {r['take']}: {r['score']}点 — {r['comment']}")
+        lines.append(f"  take {r['take']}: {r['score']} — {r['comment']}")
         if asked:
-            lines.append(f"    出した指示: {asked}")
-    lines.append("これらが今回どう反映されたかを見て判断してください。")
+            lines.append(f"    instructions given: {asked}")
+    lines.append("Judge how these were addressed in this pass.")
     return "\n".join(lines) + "\n"
 
 
@@ -94,14 +112,14 @@ def _shot_sheet(cuts: list[dict]) -> str:
             # A generated shot cannot be recomposed without paying to make it
             # again, so only the grade is on the table.
             lines.append(
-                f"カット{c['index']}: {at:.1f}〜{at + c['seconds']:.1f}秒 / 生成ショット"
-                f"（カメラワークは変更不可・露出のみ調整可） / "
+                f"cut {c['index']}: {at:.1f}-{at + c['seconds']:.1f}s / generated shot"
+                f" (camera work is fixed, exposure only) / "
                 f"exposure {c.get('exposure', 0.0):+.2f} / "
                 f"contrast {c.get('contrast', 1.0):.2f}"
             )
         else:
             lines.append(
-                f"カット{c['index']}: {at:.1f}〜{at + c['seconds']:.1f}秒 / {c['motion']} / "
+                f"cut {c['index']}: {at:.1f}-{at + c['seconds']:.1f}s / {c['motion']} / "
                 f"zoom {c['zoom_to']:.2f} / exposure {c.get('exposure', 0.0):+.2f} / "
                 f"contrast {c.get('contrast', 1.0):.2f}"
             )
@@ -118,9 +136,9 @@ async def director(ctx: Context) -> dict:
     # sign off on a film that is missing its subject.
     lost = ctx.state.get("failed_cuts") or []
     missing = (
-        "\n撮影できなかったカット: "
-        + "、".join(f"カット{f['index']}（{f.get('spot', '')}）" for f in lost)
-        + "。これらは欠けたまま編集されています。\n"
+        "\nCuts that could not be shot: "
+        + ", ".join(f"cut {f['index']} ({f.get('spot', '')})" for f in lost)
+        + ". These are missing from the edit as-is.\n"
         if lost
         else ""
     )

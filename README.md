@@ -8,7 +8,7 @@ voice, clears the image rights, shoots every cut, assembles the reel, watches
 what it made, and only then asks a human whether to publish.
 
 ```
-"水と滝の聖地を30秒で"  →  a 25-second graded, captioned, narrated film
+"Sacred sites of water and waterfalls, 30 seconds"  →  a 25-second graded, captioned, narrated film
 ```
 
 ## What it does on its own
@@ -62,10 +62,10 @@ export GOOGLE_API_KEY=...          # https://aistudio.google.com/apikey
 PYTHONPATH=. python scripts/build_catalog.py
 
 # One film, start to finish
-PYTHONPATH=. python scripts/run_local.py "水と滝の聖地を30秒で"
+PYTHONPATH=. python scripts/run_local.py "Sacred sites of water and waterfalls, 30 seconds"
 
 # The same run, stopping at the screening gate for a human decision
-PYTHONPATH=. python scripts/test_hitl.py "水と滝の聖地を30秒で" publish
+PYTHONPATH=. python scripts/test_hitl.py "Sacred sites of water and waterfalls, 30 seconds" publish
 ```
 
 The finished reel lands in `out/published/<run>/`.

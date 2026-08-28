@@ -82,13 +82,13 @@ async def shoot(photo: Path | str, prompt: str, out: Path | str) -> Path:
     waited = 0.0
     while not op.done:
         if waited > TIMEOUT:
-            raise VeoError(f"Veo が {TIMEOUT:.0f} 秒で終わりませんでした")
+            raise VeoError(f"Veo did not finish within {TIMEOUT:.0f}s")
         await asyncio.sleep(POLL_INTERVAL)
         waited += POLL_INTERVAL
         op = await c.aio.operations.get(op)
 
     if not (op.response and op.response.generated_videos):
-        raise VeoError("Veo が映像を返しませんでした")
+        raise VeoError("Veo returned no video")
 
     video = op.response.generated_videos[0].video
     data = video.video_bytes
@@ -96,7 +96,7 @@ async def shoot(photo: Path | str, prompt: str, out: Path | str) -> Path:
         # The result usually arrives as a file reference rather than inline.
         data = await asyncio.to_thread(c.files.download, file=video)
     if not data:
-        raise VeoError("Veo の映像を取得できませんでした")
+        raise VeoError("Could not retrieve the video from Veo")
 
     framed.unlink(missing_ok=True)
     CACHE.mkdir(parents=True, exist_ok=True)

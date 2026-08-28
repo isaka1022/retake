@@ -1,4 +1,4 @@
-"""撮影 — renders cuts. Shots are independent, so they render together.
+"""Camera — renders cuts. Shots are independent, so they render together.
 
 On a retake only the shots the director named are shot again; the rest of the
 reel is already in the can.
@@ -32,7 +32,7 @@ async def _shoot_one(
     cost = 0.0 if veo.is_cached(photo, shot.get("motion_prompt", "")) else budget.veo_cost(veo.SECONDS)
     if shot.get("source") == "veo" and not ledger.can_afford(cost):
         # Out of money: the shot still gets made, just not generated.
-        shot = {**shot, "source": "still", "downgraded": "予算上限のため写真から作成"}
+        shot = {**shot, "source": "still", "downgraded": "Downgraded to a still: over budget"}
 
     if shot.get("source") == "veo":
         generated = workdir / f"{stem}_veo.mp4"

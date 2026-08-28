@@ -1,4 +1,4 @@
-"""ナレーション — records the voice track.
+"""Narration — records the voice track.
 
 The read decides how long each shot has to be on screen, so this runs before
 the camera rather than beside it.

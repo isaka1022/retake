@@ -1,4 +1,4 @@
-"""権利処理 — clears every still before it reaches the edit.
+"""Rights — clears every still before it reaches the edit.
 
 A shot that cannot be cleared is pulled from the plan rather than quietly
 published, which is the whole point of having this member on the crew.

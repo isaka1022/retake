@@ -1,4 +1,4 @@
-"""絵コンテ — assigns concrete camera moves to each cut."""
+"""Storyboard — assigns concrete camera moves to each cut."""
 
 from __future__ import annotations
 
@@ -9,14 +9,16 @@ from ..services import catalog, gemini
 
 MOTIONS = ["push_in", "pan_left", "pan_right"]
 
-SYSTEM = """あなたは映像作品の絵コンテ担当です。
-各カットにカメラワークを割り当てます。同じ動きが3回続かないようにしてください。
+SYSTEM = """You are the storyboard artist for a short film.
+You assign camera work to each cut. Do not let the same motion repeat three times in a row.
 
-カットの作り方は2通りあります。
-- still: 素材写真にカメラワークを与える。確実で速い
-- veo: 素材写真から映像を生成する。水や木々が実際に動くが、生成に約50秒かかり費用もかかる
+There are two ways to build a cut:
+- still: apply camera work to a still photo. Reliable and fast.
+- veo: generate video from a still photo. Water and trees actually move, but generation
+  takes about 50 seconds and costs money.
 
-veo は最も動きが効く1カットだけに使ってください。動きのない被写体には使いません。"""
+Use veo for at most one cut — whichever one motion helps the most. Never use it on a
+subject with nothing to move."""
 
 SCHEMA = {
     "type": "object",
@@ -30,7 +32,13 @@ SCHEMA = {
                     "seconds": {"type": "number"},
                     "motion": {"type": "string", "enum": MOTIONS},
                     "zoom_to": {"type": "number"},
-                    "caption": {"type": "string"},
+                    "caption": {
+                        "type": "string",
+                        "description": (
+                            "On-screen caption, in English, 34 characters or fewer so "
+                            "it fits a 1920px-wide frame without wrapping."
+                        ),
+                    },
                     "source": {"type": "string", "enum": ["still", "veo"]},
                     "motion_prompt": {"type": "string"},
                 },
@@ -49,16 +57,16 @@ SCHEMA = {
 async def storyboard(ctx: Context) -> dict:
     plan = ctx.state["plan"]
     lines = "\n".join(
-        f"{i}. {catalog.get(c['spot_slug'])['name']} / ナレーション「{c['narration']}」"
-        f" / 意図: {c['visual_intent']}"
+        f"{i}. {catalog.get(c['spot_slug'])['name']} / narration: \"{c['narration']}\""
+        f" / intent: {c['visual_intent']}"
         for i, c in enumerate(plan["cuts"])
     )
     board = await gemini.structured(
-        f"作品タイトル「{plan['title']}」\n\nカット:\n{lines}\n\n"
-        "各カットに seconds（4〜10）、motion、zoom_to（1.05〜1.30）、"
-        "画面に出すテロップ caption（15文字以内）、source、"
-        "そして source が veo のときに何がどう動くかを述べる motion_prompt を"
-        "割り当ててください。still のカットにも motion_prompt は空文字で構いません。",
+        f"Film title: \"{plan['title']}\"\n\nCuts:\n{lines}\n\n"
+        "For each cut, assign seconds (4-10), motion, zoom_to (1.05-1.30), "
+        "an on-screen caption (English, 34 characters or fewer), source, and, "
+        "when source is veo, a motion_prompt describing what moves and how. "
+        "For still cuts, motion_prompt can be an empty string.",
         SCHEMA,
         system=SYSTEM,
     )

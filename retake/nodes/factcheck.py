@@ -1,4 +1,4 @@
-"""校正 — checks the narration against the source material.
+"""Fact-check — checks the narration against the source material.
 
 The films make factual claims about real shrines and waterfalls. The director
 watches the picture and has nothing to say about whether the words are true, so
@@ -15,23 +15,28 @@ from google.adk.workflow import node
 
 from ..services import catalog, gemini
 
-SYSTEM = """あなたは事実確認の担当です。
-ナレーション原稿が、与えられた資料と矛盾していないかを判定します。
+SYSTEM = """You are a fact-checker.
+You judge whether a narration line contradicts the source material it is checked against.
 
-止めるのは、間違っていれば実害の出る主張だけです。
-  - 数値（高さ・落差・樹齢・面積・人数・年代）
-  - 固有名詞（人名・寺社名・地名）
-  - 公式な指定や肩書き（世界遺産・国宝・国指定名勝など）
-  - 由緒・伝承の内容
+The source material is in Japanese; the narration is in English. Read across the
+language gap and match them on meaning, not surface wording.
 
-止めないもの:
-  - 「美しい」「神秘的」「静寂に満ちた」といった評価・情感の表現
-  - 資料と矛盾しない範囲での情景描写
-  - 資料に書かれた事実の言い換え
+Only stop a line for claims that would cause real harm if they were wrong:
+  - Numbers (height, drop, tree age, area, headcount, era/year)
+  - Proper nouns (people, shrine/temple names, place names)
+  - Official designations or titles (World Heritage, National Treasure, nationally
+    designated scenic spot, etc.)
+  - The content of a legend or origin story
 
-資料と矛盾せず、上の4種類の具体的な主張を含まないなら supported=true です。
-supported=false のときは、資料の範囲内に収めた corrected を必ず書いてください。
-数字は原稿と同じ半角で書き、長さと調子は保ってください。"""
+Do not stop a line for:
+  - Evaluative or emotive language ("beautiful", "mystical", "hushed")
+  - Scene-setting description that does not contradict the source
+  - A paraphrase of a fact already in the source
+
+If the line does not contradict the source and makes none of the four kinds of claim
+above, supported=true.
+When supported=false, corrected must always be written and must stay within what the
+source supports. Keep numerals and the length and tone of the original line."""
 
 SCHEMA = {
     "type": "object",
@@ -43,15 +48,15 @@ SCHEMA = {
     "required": ["supported", "issue", "corrected"],
 }
 
-PROMPT = """資料（{name} / {area}）:
-概要: {overview}
-見どころ: {highlights}
-伝承: {legend}
+PROMPT = """Source material ({name} / {area}), in Japanese:
+Overview: {overview}
+Highlights: {highlights}
+Legend: {legend}
 
-ナレーション原稿:
-「{narration}」
+English narration line:
+"{narration}"
 
-この原稿は上の資料だけで裏づけられますか。"""
+Is this narration line supported by the source material above?"""
 
 
 async def _verify(cut: dict) -> dict:
