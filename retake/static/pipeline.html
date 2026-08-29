@@ -56,6 +56,12 @@
     color: var(--text-dim);
     margin-top: 2px;
   }
+  header .origin {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    color: var(--accent);
+    margin-top: 3px;
+  }
   .status-cluster {
     display: flex;
     align-items: center;
@@ -279,6 +285,9 @@
   <header>
     <div>
       <h1>Retake — Live Pipeline</h1>
+      <!-- Read off the location, never configured: whatever host is serving
+           this page is the one the crew is actually running on. -->
+      <div class="origin" id="origin"></div>
       <div class="sub" id="session-sub">connecting…</div>
     </div>
     <div class="status-cluster">
@@ -794,6 +803,10 @@ async function poll() {
 
 poll();
 setInterval(poll, POLL_MS);
+</script>
+<script>
+  document.getElementById("origin").textContent =
+    "serving from " + location.origin;
 </script>
 </body>
 </html>

@@ -9,7 +9,11 @@ from ..services import catalog, gemini
 
 SYSTEM = """You are the writer for a short documentary.
 The location list you are given is in Japanese: read it carefully, then choose only the
-locations that fit the brief and write the roughly 30-second film plan in English.
+locations that fit the brief and write the film plan in English.
+The brief sets the length. Each cut runs about eight seconds once it is narrated, so
+pick the number of locations that adds up to the length asked for — two for a fifteen
+second film, four for thirty. Never fewer than two, never more than four. When the
+brief names no length, plan for about thirty seconds.
 Keep narration sentences short. Stay factual and avoid exaggeration."""
 
 SCHEMA = {
@@ -52,8 +56,8 @@ async def producer(ctx: Context) -> dict:
         f"Brief: {brief}\n\n"
         f"Available locations (source material is in Japanese, write your answer in English):\n"
         f"{catalog.brief_for_llm()}\n\n"
-        "Choose 3 to 4 locations. For each cut, write the narration and describe the "
-        "visual intent, in English.",
+        "Choose the locations that add up to the length the brief asks for. For each "
+        "cut, write the narration and describe the visual intent, in English.",
         SCHEMA,
         system=SYSTEM,
     )
