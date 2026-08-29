@@ -12,7 +12,7 @@ from pathlib import Path
 from google.adk import Context
 from google.adk.workflow import node
 
-from ..services import assets, budget, captions, catalog, ffmpeg_ops, storage, veo
+from ..services import assets, budget, catalog, ffmpeg_ops, storage, veo
 
 
 async def _shoot_one(
@@ -26,7 +26,6 @@ async def _shoot_one(
     spot = catalog.get(shot["spot_slug"])
     photo = await assets.fetch_photo(spot["image"]["url"], spot["slug"])
     stem = f"cut_{shot['index']:02d}_t{take}"
-    raw = workdir / f"{stem}_raw.mp4"
     titled = workdir / f"{stem}_titled.mp4"
     out = workdir / f"{stem}.mp4"
     cost = 0.0 if veo.is_cached(photo, shot.get("motion_prompt", "")) else budget.veo_cost(veo.SECONDS)
@@ -40,25 +39,28 @@ async def _shoot_one(
         ledger.charge("veo", cost, f"cut {shot['index']}")
         await ffmpeg_ops.normalise(
             generated,
-            raw,
+            titled,
             seconds=shot["seconds"],
             exposure=shot.get("exposure", 0.0),
             contrast=shot.get("contrast", 1.0),
+            caption=shot["caption"],
+            credit=credit,
         )
         storage.discard(generated)
     else:
         await ffmpeg_ops.ken_burns(
             photo,
-            raw,
+            titled,
             seconds=shot["seconds"],
             zoom_to=shot["zoom_to"],
             motion=shot["motion"],
             exposure=shot.get("exposure", 0.0),
             contrast=shot.get("contrast", 1.0),
+            caption=shot["caption"],
+            credit=credit,
         )
-    await captions.burn(raw, titled, caption=shot["caption"], credit=credit)
     await ffmpeg_ops.mux_audio(titled, voice, out, seconds=shot["seconds"])
-    storage.discard(raw, titled)
+    storage.discard(titled)
     return {**shot, "clip": str(out), "photo": str(photo), "take": take}
 
 

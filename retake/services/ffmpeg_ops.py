@@ -64,24 +64,41 @@ async def ken_burns(
     motion: str = "push_in",
     exposure: float = 0.0,
     contrast: float = 1.0,
+    caption: str | None = None,
+    credit: str | None = None,
 ) -> Path:
     """Render one still into a moving clip.
 
     Uses an explicit frame count rather than -shortest: combining `-loop 1`
     with zoompan and `-shortest` inflates the output by roughly 1.6x.
+
+    An optional caption/credit is drawn into the same filter chain so the
+    clip only needs one encode instead of a Ken Burns pass plus a caption pass.
     """
     frames = max(1, round(seconds * FPS))
     out = Path(out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    await _run([
-        "-loop", "1", "-i", str(image),
-        "-filter_complex",
-        f"[0:v]{_zoompan_expr(frames, zoom_to, motion)}"
-        f",eq=brightness={exposure:.3f}:contrast={contrast:.3f}[v]",
-        "-map", "[v]", "-frames:v", str(frames),
-        "-c:v", "libx264", "-preset", "medium", "-crf", "18",
-        "-pix_fmt", "yuv420p", "-r", str(FPS), str(out),
-    ])
+    chain = (
+        f"{_zoompan_expr(frames, zoom_to, motion)}"
+        f",eq=brightness={exposure:.3f}:contrast={contrast:.3f}"
+    )
+    tmpfiles: list[Path] = []
+    if caption:
+        from retake.services.captions import caption_filters
+
+        filters, tmpfiles = caption_filters(caption=caption, credit=credit)
+        chain += "," + ",".join(filters)
+    try:
+        await _run([
+            "-loop", "1", "-i", str(image),
+            "-filter_complex", f"[0:v]{chain}[v]",
+            "-map", "[v]", "-frames:v", str(frames),
+            "-c:v", "libx264", "-preset", "medium", "-crf", "18",
+            "-pix_fmt", "yuv420p", "-r", str(FPS), str(out),
+        ])
+    finally:
+        for f in tmpfiles:
+            f.unlink(missing_ok=True)
     return out
 
 
@@ -179,30 +196,47 @@ async def normalise(
     seconds: float,
     exposure: float = 0.0,
     contrast: float = 1.0,
+    caption: str | None = None,
+    credit: str | None = None,
 ) -> Path:
     """Bring a generated clip in line with the rest of the reel.
 
     Veo returns 720p with its own audio at a fixed length; the concat demuxer
     needs every cut to match, so this resizes, drops the audio and either trims
     or freezes the tail to the length the edit asked for.
+
+    An optional caption/credit is drawn into the same filter chain so the
+    clip only needs one encode instead of a normalise pass plus a caption pass.
     """
     out = Path(out)
     out.parent.mkdir(parents=True, exist_ok=True)
     width, height = SIZE.split("x")
-    await _run([
-        "-i", str(src),
-        "-vf",
+    chain = (
         f"scale={width}:{height}:force_original_aspect_ratio=increase,"
         f"crop={width}:{height},"
         f"eq=brightness={exposure:.3f}:contrast={contrast:.3f},"
         f"tpad=stop_mode=clone:stop_duration={max(seconds, 0.1):.3f},"
-        f"fps={FPS}",
-        "-an",
-        "-frames:v", str(max(1, round(seconds * FPS))),
-        "-c:v", "libx264", "-preset", "medium", "-crf", "18",
-        "-pix_fmt", "yuv420p", "-r", str(FPS),
-        str(out),
-    ])
+        f"fps={FPS}"
+    )
+    tmpfiles: list[Path] = []
+    if caption:
+        from retake.services.captions import caption_filters
+
+        filters, tmpfiles = caption_filters(caption=caption, credit=credit)
+        chain += "," + ",".join(filters)
+    try:
+        await _run([
+            "-i", str(src),
+            "-vf", chain,
+            "-an",
+            "-frames:v", str(max(1, round(seconds * FPS))),
+            "-c:v", "libx264", "-preset", "medium", "-crf", "18",
+            "-pix_fmt", "yuv420p", "-r", str(FPS),
+            str(out),
+        ])
+    finally:
+        for f in tmpfiles:
+            f.unlink(missing_ok=True)
     return out
 
 

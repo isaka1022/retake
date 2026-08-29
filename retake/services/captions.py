@@ -68,18 +68,15 @@ def _drawtext(
     return expr, Path(tmp.name)
 
 
-async def burn(
-    src: Path | str,
-    out: Path | str,
-    *,
-    caption: str,
-    credit: str | None = None,
-) -> Path:
-    """Burn a bottom caption and optional small credit line into a clip."""
-    font = _font_path()
-    out = Path(out)
-    out.parent.mkdir(parents=True, exist_ok=True)
+def caption_filters(
+    *, caption: str, credit: str | None = None
+) -> tuple[list[str], list[Path]]:
+    """Build the drawtext filter chain for a caption and optional credit line.
 
+    Shared by `burn` (a standalone pass) and callers that splice these filters
+    into another filter chain to avoid a separate encode.
+    """
+    font = _font_path()
     filters = []
     tmpfiles: list[Path] = []
     caption_expr, caption_file = _drawtext(
@@ -96,6 +93,20 @@ async def burn(
         )
         filters.append(credit_expr)
         tmpfiles.append(credit_file)
+    return filters, tmpfiles
+
+
+async def burn(
+    src: Path | str,
+    out: Path | str,
+    *,
+    caption: str,
+    credit: str | None = None,
+) -> Path:
+    """Burn a bottom caption and optional small credit line into a clip."""
+    out = Path(out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    filters, tmpfiles = caption_filters(caption=caption, credit=credit)
 
     try:
         await _run([
