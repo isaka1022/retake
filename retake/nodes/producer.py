@@ -5,15 +5,15 @@ from __future__ import annotations
 from google.adk import Context
 from google.adk.workflow import node
 
-from ..services import catalog, gemini
+from ..services import catalog, gemini, length
 
-SYSTEM = """You are the writer for a short documentary.
+SYSTEM = f"""You are the writer for a short documentary.
 The location list you are given is in Japanese: read it carefully, then choose only the
 locations that fit the brief and write the film plan in English.
-The brief sets the length. Each cut runs about eight seconds once it is narrated, so
-pick the number of locations that adds up to the length asked for — two for a fifteen
-second film, four for thirty. Never fewer than two, never more than four. When the
-brief names no length, plan for about thirty seconds.
+The brief sets the length. Each cut runs about {length.CUT_SECONDS:g} seconds once it is
+narrated, so pick the number of locations that adds up to the length asked for. Never
+fewer than {length.MIN_CUTS}, never more than {length.MAX_CUTS}. When the brief names no
+length, plan for about {length.CUT_SECONDS * length.MAX_CUTS:g} seconds.
 Keep narration sentences short. Stay factual and avoid exaggeration."""
 
 SCHEMA = {

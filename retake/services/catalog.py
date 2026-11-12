@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 import json
+import os
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-CATALOG = Path(__file__).resolve().parent.parent / "assets" / "catalog.json"
+DEFAULT_CATALOG = Path(__file__).resolve().parent.parent / "assets" / "catalog.json"
+
+#: A film shot outside the location library points this at its own catalog.
+CATALOG = Path(os.environ.get("RETAKE_CATALOG") or DEFAULT_CATALOG)
 
 
 @lru_cache(maxsize=1)
