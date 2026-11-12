@@ -14,7 +14,7 @@ what it made, and only then asks a human whether to publish.
 | | |
 |---|---|
 | Live demo (unedited) | https://youtu.be/DGUlAekqiyk |
-| Running on Cloud Run | https://retake-4lycxzkhja-uc.a.run.app/pipeline |
+| Hosted service | Taken down in November 2026 — [deploy your own](#deploy-to-cloud-run) |
 | Architecture | [docs/architecture.md](docs/architecture.md) |
 
 `/pipeline` is the crew's own live view — it lights up left to right as the
